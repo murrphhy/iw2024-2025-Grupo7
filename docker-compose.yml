@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  debian:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ucaTech:/home
+      - ./maven_repo:/root/.m2
+    container_name: debian_container
+    command: tail -f /dev/null
+    networks: 
+      - infra
+
+  database:
+    image: mysql:latest
+    container_name: mysql-iw
+    ports:
+      - "3306:3306"
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: iw
+      MYSQL_PASSWORD: iw
+      MYSQL_DATABASE: ucaTech
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+    networks:
+      - infra
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin-iw
+    ports:
+      - "8080:80"
+    restart: always
+    environment:
+      PMA_HOST: database
+      PMA_USER: iw
+      PMA_PASSWORD: iw
+      MYSQL_ROOT_PASSWORD: password
+    depends_on:
+      - database
+    networks:
+      - infra
+
+networks:
+  infra:
+
+volumes:
+  maven_repo:
+  mysql-data:
