@@ -27,5 +27,5 @@ Antes de empezar por los comandos, os dejo un tutorial de instalación y configu
 - `git push`: subir los cambios que hemos hecho en nuestro repositorio local (nuestra máquina) al repositorio "global" (github).
 - `git checkout <rama>`: cambiamos la rama en la que estamnos trabajando.
 - `git branch -D <nombre-rama>`: borramos la rama con `nombre-rama`.
-## Información adicional
+## Información adicional (cheat sheet)
 https://education.github.com/git-cheat-sheet-education.pdf
