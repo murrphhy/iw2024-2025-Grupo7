@@ -1,10 +1,9 @@
-version: '3'
-
 services:
   debian:
     build: .
     ports:
       - "8000:8000"
+      - "8080:8080"
     volumes:
       - ./ucaTech:/home
       - ./maven_repo:/root/.m2
@@ -33,7 +32,7 @@ services:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin-iw
     ports:
-      - "8080:80"
+      - "8090:80"
     restart: always
     environment:
       PMA_HOST: database
