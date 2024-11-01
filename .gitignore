@@ -4,6 +4,3 @@ mysql-data/
 # Ignorar repositorio local de Maven
 maven_repo/
 
-# Ignorar carpeta de desarrollo ucaTech (solo si no quieres rastrear su contenido)
-ucaTech/
-
