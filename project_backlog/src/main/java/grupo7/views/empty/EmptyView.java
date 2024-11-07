@@ -1,4 +1,4 @@
-package ucatech.views.empty;
+package grupo7.views.empty;
 
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Image;
@@ -11,7 +11,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
 
 @PageTitle("Empty")
 @Route("")
-@Menu(order = 0, icon = "line-awesome/svg/file.svg")
+@Menu(order = 1, icon = "line-awesome/svg/file.svg")
 public class EmptyView extends VerticalLayout {
 
     public EmptyView() {
@@ -21,10 +21,10 @@ public class EmptyView extends VerticalLayout {
         img.setWidth("200px");
         add(img);
 
-        H2 header = new H2("This place intentionally left empty");
+        H2 header = new H2("This place intentionally left empty for developers");
         header.addClassNames(Margin.Top.XLARGE, Margin.Bottom.MEDIUM);
         add(header);
-        add(new Paragraph("It’s a place where you can grow your own  🤗"));
+        add(new Paragraph("It’s a place where you can grow your own UIIII 🤗"));
 
         setSizeFull();
         setJustifyContentMode(JustifyContentMode.CENTER);

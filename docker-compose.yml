@@ -1,17 +1,4 @@
 services:
-  debian:
-    build: .
-    ports:
-      - "8000:8000"
-      - "8080:8080"
-    volumes:
-      - ./project_backlog:/home
-      - ./maven_repo:/root/.m2
-    container_name: debian_container
-    command: tail -f /dev/null
-    networks: 
-      - infra
-
   database:
     image: mysql:latest
     container_name: mysql-iw

@@ -1,4 +1,4 @@
-package ucatech.views.personform;
+package grupo7.views.personform;
 
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;

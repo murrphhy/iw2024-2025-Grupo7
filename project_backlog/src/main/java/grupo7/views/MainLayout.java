@@ -1,4 +1,4 @@
-package ucatech.views;
+package grupo7.views;
 
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
@@ -43,7 +43,7 @@ public class MainLayout extends AppLayout {
     }
 
     private void addDrawerContent() {
-        Span appName = new Span("My App");
+        Span appName = new Span("project_backlog");
         appName.addClassNames(LumoUtility.FontWeight.SEMIBOLD, LumoUtility.FontSize.LARGE);
         Header header = new Header(appName);
 
