@@ -5,7 +5,7 @@ services:
       - "8000:8000"
       - "8080:8080"
     volumes:
-      - ./ucaTech:/home
+      - ./project_backlog:/home
       - ./maven_repo:/root/.m2
     container_name: debian_container
     command: tail -f /dev/null
