@@ -14,7 +14,7 @@ Para realizar la instalación de la infraestructura del proyecto, la cual la vam
    - Windows: https://www.youtube.com/watch?v=X40b9x9BFGo
 4. Entramos en la carpeta que nos ha aparecido: `cd iw2024-2025-Grupo7`.
 5. Una vez en la carpeta del proyecto, construiremos el entorno mediante el comando `make build` (se recomienda observar el archivo `makefile` para entender que es lo que se hace con cada comando).
-6. Por último, tras construir la imagen, la levantaremos con `make up`, esto nos levantará toda la infraestructura (la base de datos, el phpmyadmin para manejarla y un debian con lo necesario para usar maven y node).
+6. Por último, tras construir la imagen, la levantaremos con `make up`, esto nos levantará toda la infraestructura (la base de datos y el phpmyadmin para manejarla).
 
 # Comandos Básicos de git (descripciones informales)
 Antes de empezar por los comandos, os dejo un tutorial de instalación y configuración inicial de git, por si no lo tenéis instalado: 
