@@ -12,6 +12,7 @@ services:
       MYSQL_DATABASE: project_backlog
     volumes:
       - ./mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
     networks:
       - infra
 
@@ -35,5 +36,4 @@ networks:
   infra:
 
 volumes:
-  maven_repo:
   mysql-data:
