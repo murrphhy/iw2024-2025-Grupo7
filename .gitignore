@@ -3,3 +3,6 @@ mysql-data/
 
 # Ignorar repositorio local de Maven
 maven_repo/
+
+# Ignorar .idea
+.idea/
