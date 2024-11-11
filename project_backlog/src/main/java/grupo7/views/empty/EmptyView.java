@@ -10,7 +10,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
 
 @PageTitle("Empty")
-@Route("")
+@Route("empty")
 @Menu(order = 1, icon = "line-awesome/svg/file.svg")
 public class EmptyView extends VerticalLayout {
 

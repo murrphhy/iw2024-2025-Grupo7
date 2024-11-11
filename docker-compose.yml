@@ -9,7 +9,7 @@ services:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_USER: iw
       MYSQL_PASSWORD: iw
-      MYSQL_DATABASE: ucaTech
+      MYSQL_DATABASE: project_backlog
     volumes:
       - ./mysql-data:/var/lib/mysql
     networks:
