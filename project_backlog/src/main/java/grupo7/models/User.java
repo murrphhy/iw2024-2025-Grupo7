@@ -28,21 +28,19 @@ public class User {
     public Long getId() {
         return id;
     }
+    public String getName() {
+        return nombre;
+    }
+    public String getEmail() {
+        return email;
+    }
 
     public void setId(Long id) {
         this.id = id;
     }
 
-    public String getName() {
-        return nombre;
-    }
-
     public void setName(String nombre) {
         this.nombre = nombre;
-    }
-
-    public String getEmail() {
-        return email;
     }
 
     public void setEmail(String email) {
