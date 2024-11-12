@@ -1,6 +1,6 @@
 package grupo7.services;
 
-import grupo7.models.User
+import grupo7.models.User;
 import grupo7.repositories.UserRepository;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
