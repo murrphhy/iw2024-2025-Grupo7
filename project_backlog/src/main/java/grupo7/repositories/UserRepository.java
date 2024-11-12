@@ -1,6 +1,6 @@
-package grupo7.repository;
+package grupo7.repositories;
 
-import grupo7.model.User;
+import grupo7.models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

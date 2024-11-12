@@ -1,7 +1,7 @@
-package grupo7.controller;
+package grupo7.controllers;
 
-import grupo7.model.User;
-import grupo7.service.UserService;
+import grupo7.models.User;
+import grupo7.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;

@@ -1,4 +1,4 @@
-package grupo7.model;
+package grupo7.models;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

@@ -1,7 +1,7 @@
-package grupo7.service;
+package grupo7.services;
 
-import grupo7.model.User;
-import grupo7.repository.UserRepository;
+import grupo7.models.User;
+import grupo7.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
