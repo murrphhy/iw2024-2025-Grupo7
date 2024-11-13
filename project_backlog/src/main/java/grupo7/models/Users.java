@@ -2,25 +2,32 @@ package grupo7.models;
 
 import javax.persistence.*;
 
-public class User {
+@Entity
+@Table(name = "Users")
+@Inheritance(strategy = InheritanceType.JOINED)
+public class Users {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
-    private String password;
     private String email;
+    private String password;
     private boolean isAdmin;
 
-    public User(){}
+    public Users() {}
 
-    public User(String name, String password, String email, boolean isAdmin) {
+    public Users(String name, String email, String password, boolean isAdmin) {
         this.name = name;
-        this.password = password;
         this.email = email;
+        this.password = password;
         this.isAdmin = isAdmin;
     }
 
+    public Long getId() {
+        return id;
+    }
     public String getUsername() {
         return name;
     }
@@ -34,6 +41,9 @@ public class User {
         return password;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
     public void setName(String name){
         this.name = name;
     }

@@ -1,6 +1,6 @@
 package grupo7.services;
 
-import grupo7.models.User;
+import grupo7.models.*;
 import grupo7.repositories.UserRepository;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,18 +18,29 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        User user = userRepository.findByUsername(username)
+        Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
         Set<SimpleGrantedAuthority> authorities = new HashSet<>();
-        user.getRoles().forEach(role ->
-                authorities.add(new SimpleGrantedAuthority(role))
-        );
+
+        if (user instanceof Technician) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_TECHNICIAN"));
+        } else if (user instanceof Promoter) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_PROMOTER"));
+        } else if (user instanceof Cio) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_CIO"));
+        } else if (user instanceof Applicant) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_APPLICANT"));
+        } else if (user.isAdmin()) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        } else {
+            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+        }
 
         return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
+                user.getEmail(),
                 user.getPassword(),
                 authorities
         );

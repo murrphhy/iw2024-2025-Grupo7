@@ -1,9 +1,11 @@
 package grupo7.models;
 
 import javax.persistence.Entity;
+import javax.persistence.Table;
 
 @Entity
-public class Applicant extends User{
+@Table(name = "Applicant")
+public class Applicant extends Users {
 
     private String unit;
 
@@ -14,9 +16,11 @@ public class Applicant extends User{
         this.unit = unit;
     }
 
+    // Getters y Setters
     public String getUnit() {
         return unit;
     }
+
     public void setUnit(String unit) {
         this.unit = unit;
     }

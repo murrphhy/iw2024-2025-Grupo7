@@ -24,16 +24,19 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/register").permitAll()
+                        .requestMatchers("/register", "/public/**").permitAll()
+                        .requestMatchers("/technician/**").hasRole("TECHNICIAN")
+                        .requestMatchers("/promoter/**").hasRole("PROMOTER")
+                        .requestMatchers("/cio/**").hasRole("CIO")
+                        .requestMatchers("/applicant/**").hasRole("APPLICANT")
                         .anyRequest().authenticated()
                 )
-
                 .formLogin(form -> form
                         .loginPage("/login").permitAll()
                         .defaultSuccessUrl("/")
                 )
-
-                .logout(logout -> logout.permitAll());
+                .logout(logout -> logout.permitAll())
+                .authenticationProvider(authenticationProvider());
 
         return http.build();
     }
@@ -52,5 +55,4 @@ public class SecurityConfig {
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
 }

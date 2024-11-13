@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS project_backlog;
 USE project_backlog;
 
-CREATE TABLE `User` (
+CREATE TABLE `Users` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `name` VARCHAR(255) NOT NULL,
     `email` VARCHAR(255) NOT NULL UNIQUE,
@@ -21,8 +21,8 @@ CREATE TABLE `Project` (
     `start_date` DATE,
     `project_regulations` VARCHAR(255),
     `technical_specification` VARCHAR(255),
-    FOREIGN KEY (applicant_id) REFERENCES User(id),
-    FOREIGN KEY (promoter_id) REFERENCES User(id)
+    FOREIGN KEY (applicant_id) REFERENCES Users(id),
+    FOREIGN KEY (promoter_id) REFERENCES Users(id)
 );
 
 CREATE TABLE `Stakeholder_Project` (
@@ -30,7 +30,7 @@ CREATE TABLE `Stakeholder_Project` (
     `project_id` BIGINT UNSIGNED NOT NULL,
     `financing` DOUBLE NOT NULL,
     PRIMARY KEY (user_id, project_id), 
-    FOREIGN KEY (user_id) REFERENCES User(id), 
+    FOREIGN KEY (user_id) REFERENCES Users(id), 
     FOREIGN KEY (project_id) REFERENCES Project(id)
 );
 
@@ -39,7 +39,7 @@ CREATE TABLE `Technician_Project` (
     `project_id` BIGINT UNSIGNED NOT NULL,
     `project_appraisal` BIGINT NOT NULL,
     PRIMARY KEY (user_id, project_id),
-    FOREIGN KEY (user_id) REFERENCES User(id), 
+    FOREIGN KEY (user_id) REFERENCES Users(id), 
     FOREIGN KEY (project_id) REFERENCES Project(id) 
 );
 
@@ -48,31 +48,31 @@ CREATE TABLE `CIO_Project` (
     `project_id` BIGINT UNSIGNED NOT NULL,
     `strategic_alignment` BIGINT NOT NULL,
     PRIMARY KEY (user_id, project_id),
-    FOREIGN KEY (user_id) REFERENCES User(id),
+    FOREIGN KEY (user_id) REFERENCES Users(id),
     FOREIGN KEY (project_id) REFERENCES Project(id)
 );
 
 CREATE TABLE `Technician` (
-    `user_id` BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+    `id` BIGINT UNSIGNED NOT NULL PRIMARY KEY,
     `technical_area` VARCHAR(255) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES User(id) 
+    FOREIGN KEY (`id`) REFERENCES `Users`(`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `Promoter` (
-    `user_id` BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+    `id` BIGINT UNSIGNED NOT NULL PRIMARY KEY,
     `importance` BIGINT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES User(id) 
+    FOREIGN KEY (`id`) REFERENCES `Users`(`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `Applicant` (
-    `user_id` BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+    `id` BIGINT UNSIGNED NOT NULL PRIMARY KEY,
     `unit` VARCHAR(255) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES User(id) 
+    FOREIGN KEY (`id`) REFERENCES `Users`(`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `CIO` (
-    `user_id` BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+    `id` BIGINT UNSIGNED NOT NULL PRIMARY KEY,
     `position` VARCHAR(255) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES User(id)
+    FOREIGN KEY (`id`) REFERENCES `Users`(`id`) ON DELETE CASCADE
 );
 
