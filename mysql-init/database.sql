@@ -21,9 +21,9 @@ CREATE TABLE `Project` (
     `start_date` DATE,
     `project_regulations` VARCHAR(255),
     `technical_specification` VARCHAR(255),
-    FOREIGN KEY (applicant_id) REFERENCES User(id),
-    FOREIGN KEY (promoter_id) REFERENCES User(id)
+    FOREIGN KEY (applicant_id) REFERENCES User(id)
 );
+
 
 CREATE TABLE `Stakeholder_Project` (
     `user_id` BIGINT UNSIGNED NOT NULL,
