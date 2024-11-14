@@ -7,12 +7,15 @@ CREATE TABLE `User` (
     `email` VARCHAR(255) NOT NULL UNIQUE,
     `password` VARCHAR(255) NOT NULL,
     `academic_position` VARCHAR(255) NULL,
+    `center` VARCHAR(255) NOT NULL,
+    `technical_area` VARCHAR(255) NOT NULL,
     `isAdmin` BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE `Project` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `applicant_id` BIGINT UNSIGNED NOT NULL,
+    `promoter_id` BIGINT UNSIGNED NOT NULL,
     `title` VARCHAR(255) NOT NULL,
     `short_title` VARCHAR(255) NOT NULL,
     `memory` VARCHAR(255) NOT NULL,
@@ -50,22 +53,4 @@ CREATE TABLE `Support` (
     PRIMARY KEY (user_id, project_id),
     FOREIGN KEY (user_id) REFERENCES User(id),
     FOREIGN KEY (project_id) REFERENCES Project(id)
-);
-
-CREATE TABLE `Technician` (
-    `id` BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-    `technical_area` VARCHAR(255) NOT NULL,
-    FOREIGN KEY (`id`) REFERENCES `User`(`id`) ON DELETE CASCADE
-);
-
-CREATE TABLE `Applicant` (
-    `id` BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-    `unit` VARCHAR(255) NOT NULL,
-    FOREIGN KEY (`id`) REFERENCES `User`(`id`) ON DELETE CASCADE
-);
-
-CREATE TABLE `CIO` (
-    `id` BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-    `position` VARCHAR(255) NOT NULL,
-    FOREIGN KEY (`id`) REFERENCES `User`(`id`) ON DELETE CASCADE
 );
