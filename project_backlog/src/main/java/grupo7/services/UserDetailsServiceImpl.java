@@ -1,48 +1,37 @@
 package grupo7.services;
 
-import grupo7.models.*;
 import grupo7.repositories.UserRepository;
-import org.springframework.security.core.userdetails.*;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
-
-    private final UserRepository userRepository;
-
-    public UserDetailsServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    @Autowired
+    private UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-
-        Users user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
-
-        Set<SimpleGrantedAuthority> authorities = new HashSet<>();
-
-        if (user instanceof Technician) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_TECHNICIAN"));
-        } else if (user instanceof Promoter) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_PROMOTER"));
-        } else if (user instanceof Cio) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_CIO"));
-        } else if (user instanceof Applicant) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_APPLICANT"));
-        } else if (user.isAdmin()) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        } else {
-            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-        }
-
-        return new org.springframework.security.core.userdetails.User(
+    public UserDetails loadUserByEmail(String email) throws UsernameNotFoundException {
+        User user = UserRepository.finByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return new User(
+                user.getName(),
                 user.getEmail(),
-                user.getPassword(),
-                authorities
+                user.getAcademicPosition(),
         );
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

@@ -5,14 +5,14 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "Technician")
-public class Technician extends Users {
+public class Technician extends User {
 
     private String technicalArea;
 
     public Technician() {}
 
-    public Technician(String name, String email, String password, boolean isAdmin, String technicalArea) {
-        super(name, email, password, isAdmin);
+    public Technician(String name, String email, String password, String position, boolean isAdmin, String technicalArea) {
+        super(name, email, password, position, isAdmin);
         this.technicalArea = technicalArea;
     }
 

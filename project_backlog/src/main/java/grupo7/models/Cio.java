@@ -5,23 +5,23 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "CIO")
-public class Cio extends Users {
+public class Cio extends User {
 
-    private String position;
+    private String cioPosition;
 
     public Cio() {}
 
-    public Cio(String name, String email, String password, boolean isAdmin, String position) {
-        super(name, email, password, isAdmin);
-        this.position = position;
+    public Cio(String name, String email, String password, String userPosition, boolean isAdmin, String cioPosition) {
+        super(name, email, password, userPosition, isAdmin);
+        this.cioPosition = cioPosition;
     }
 
     // Getters y Setters
     public String getPosition() {
-        return position;
+        return cioPosition;
     }
 
     public void setPosition(String position) {
-        this.position = position;
+        this.cioPosition = position;
     }
 }
