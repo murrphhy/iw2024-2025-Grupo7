@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-Application<projectbacklog>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "grupo7.Application",
+            "projectName": "projectbacklog",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
