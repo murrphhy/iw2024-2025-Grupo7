@@ -1,30 +1,48 @@
 package grupo7.models;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
+import java.util.Date;
 
 @Entity
+@Table(name = "projects")
 public class Project {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
-    private String description;
+    @Column(name = "applicant_id", nullable = false)
+    private Long applicantId;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false) // Clave foránea en la tabla de proyectos
-    private Support support;
+    @Column(name = "promoter_id", nullable = false)
+    private Long promoterId;
 
-    // Constructores, getters y setters
-    public Project() {}
+    @Column(nullable = false, length = 100)
+    private String title;
 
-    public Project(String name, String description, Support support) {
-        this.name = name;
-        this.description = description;
-        this.support = support;
-    }
+    @Column(name = "short_title", nullable = false, length = 50)
+    private String shortTitle;
 
+    @Column(columnDefinition = "TEXT")
+    private String memory;
+
+    @Column(nullable = false)
+    private String state;
+
+    @Column(nullable = false)
+    private String scope;
+
+    @Temporal(TemporalType.DATE)
+    @Column(name = "start_date", nullable = false)
+    private Date startDate;
+
+    @Column(name = "project_regulations", columnDefinition = "TEXT")
+    private String projectRegulations;
+
+    @Column(name = "technical_specifications", columnDefinition = "TEXT")
+    private String technicalSpecifications;
+
+    // Getters y Setters
     public Long getId() {
         return id;
     }
@@ -33,28 +51,83 @@ public class Project {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public Long getApplicantId() {
+        return applicantId;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setApplicantId(Long applicantId) {
+        this.applicantId = applicantId;
     }
 
-    public String getDescription() {
-        return description;
+    public Long getPromoterId() {
+        return promoterId;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setPromoterId(Long promoterId) {
+        this.promoterId = promoterId;
     }
 
-    public Support getApplicant() {
-        return support;
+    public String getTitle() {
+        return title;
     }
 
-    public void setApplicant(Support support) {
-        this.support = support;
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getShortTitle() {
+        return shortTitle;
+    }
+
+    public void setShortTitle(String shortTitle) {
+        this.shortTitle = shortTitle;
+    }
+
+    public String getMemory() {
+        return memory;
+    }
+
+    public void setMemory(String memory) {
+        this.memory = memory;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public String getScope() {
+        return scope;
+    }
+
+    public void setScope(String scope) {
+        this.scope = scope;
+    }
+
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
+
+    public String getProjectRegulations() {
+        return projectRegulations;
+    }
+
+    public void setProjectRegulations(String projectRegulations) {
+        this.projectRegulations = projectRegulations;
+    }
+
+    public String getTechnicalSpecifications() {
+        return technicalSpecifications;
+    }
+
+    public void setTechnicalSpecifications(String technicalSpecifications) {
+        this.technicalSpecifications = technicalSpecifications;
     }
 }
-

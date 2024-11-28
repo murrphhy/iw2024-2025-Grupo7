@@ -1,12 +1,11 @@
 package grupo7.models;
 
-import grupo7.models.keys.SupportId;
-
 import jakarta.persistence.*;
+import java.io.Serializable;
 
 @Entity
-@IdClass(SupportId.class)  // Indica que esta clase utiliza una clave compuesta
-public class Support {
+@Table(name = "technician_project")
+public class Technician_Project implements Serializable {
 
     @Id
     @ManyToOne
@@ -18,9 +17,11 @@ public class Support {
     @JoinColumn(name = "project_id")
     private Project project;
 
-    private int rating;
+    @Column(name = "project_appraisal")
+    private Integer projectAppraisal;
 
-    // Getters y Setters
+    // Getters and Setters
+
     public User getUser() {
         return user;
     }
@@ -37,11 +38,11 @@ public class Support {
         this.project = project;
     }
 
-    public int getRating() {
-        return rating;
+    public Integer getProjectAppraisal() {
+        return projectAppraisal;
     }
 
-    public void setRating(int rating) {
-        this.rating = rating;
+    public void setProjectAppraisal(Integer projectAppraisal) {
+        this.projectAppraisal = projectAppraisal;
     }
 }
