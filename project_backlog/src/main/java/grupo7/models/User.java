@@ -3,7 +3,7 @@ package grupo7.models;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "User")
+@Table(name = "user")
 @Inheritance(strategy = InheritanceType.JOINED)
 public class User {
 

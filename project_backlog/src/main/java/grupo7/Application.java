@@ -17,8 +17,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  */
 @Theme(value = "projectbacklog")
 @SpringBootApplication(scanBasePackages = "grupo7")
-@EnableJpaRepositories("grupo7.repositories")
-@EntityScan("grupo7.models")
 public class Application implements AppShellConfigurator {
 
     public static void main(String[] args) {
@@ -28,7 +26,6 @@ public class Application implements AppShellConfigurator {
 
         dotenv.entries().forEach(entry -> {
             System.setProperty(entry.getKey(), entry.getValue());
-            System.out.println(entry.getKey() + "=" + entry.getValue());
         });
 
         SpringApplication.run(Application.class, args);
