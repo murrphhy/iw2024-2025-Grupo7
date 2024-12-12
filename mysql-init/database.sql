@@ -1,11 +1,14 @@
 CREATE DATABASE IF NOT EXISTS project_backlog;
 USE project_backlog;
 
-CREATE TABLE `User` (
+CREATE TABLE `users` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    `name` VARCHAR(255) NOT NULL,
+    `username` VARCHAR(255) NOT NULL,
     `email` VARCHAR(255) NOT NULL UNIQUE,
     `password` VARCHAR(255) NOT NULL,
+    `academic_position` VARCHAR(255) NULL,
+    `center` VARCHAR(255) NOT NULL,
+    `technical_area` VARCHAR(255) NOT NULL,
     `isAdmin` BOOLEAN NOT NULL DEFAULT FALSE
 );
 
@@ -21,16 +24,16 @@ CREATE TABLE `Project` (
     `start_date` DATE,
     `project_regulations` VARCHAR(255),
     `technical_specification` VARCHAR(255),
-    FOREIGN KEY (applicant_id) REFERENCES User(id),
-    FOREIGN KEY (promoter_id) REFERENCES User(id)
+    FOREIGN KEY (applicant_id) REFERENCES users(id)
 );
+
 
 CREATE TABLE `Stakeholder_Project` (
     `user_id` BIGINT UNSIGNED NOT NULL,
     `project_id` BIGINT UNSIGNED NOT NULL,
     `financing` DOUBLE NOT NULL,
-    PRIMARY KEY (user_id, project_id), 
-    FOREIGN KEY (user_id) REFERENCES User(id), 
+    PRIMARY KEY (user_id, project_id),
+    FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (project_id) REFERENCES Project(id)
 );
 
@@ -39,40 +42,15 @@ CREATE TABLE `Technician_Project` (
     `project_id` BIGINT UNSIGNED NOT NULL,
     `project_appraisal` BIGINT NOT NULL,
     PRIMARY KEY (user_id, project_id),
-    FOREIGN KEY (user_id) REFERENCES User(id), 
-    FOREIGN KEY (project_id) REFERENCES Project(id) 
-);
-
-CREATE TABLE `CIO_Project` (
-    `user_id` BIGINT UNSIGNED NOT NULL,
-    `project_id` BIGINT UNSIGNED NOT NULL,
-    `strategic_alignment` BIGINT NOT NULL,
-    PRIMARY KEY (user_id, project_id),
-    FOREIGN KEY (user_id) REFERENCES User(id),
+    FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (project_id) REFERENCES Project(id)
 );
 
-CREATE TABLE `Technician` (
-    `user_id` BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-    `technical_area` VARCHAR(255) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES User(id) 
+CREATE TABLE `Support` (
+    `user_id` BIGINT UNSIGNED NOT NULL,
+    `project_id` BIGINT UNSIGNED NOT NULL,
+    `rating` INT NOT NULL,
+    PRIMARY KEY (user_id, project_id),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (project_id) REFERENCES Project(id)
 );
-
-CREATE TABLE `Promoter` (
-    `user_id` BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-    `importance` BIGINT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES User(id) 
-);
-
-CREATE TABLE `Applicant` (
-    `user_id` BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-    `unit` VARCHAR(255) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES User(id) 
-);
-
-CREATE TABLE `CIO` (
-    `user_id` BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-    `position` VARCHAR(255) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES User(id)
-);
-
