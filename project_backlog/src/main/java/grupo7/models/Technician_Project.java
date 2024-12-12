@@ -1,10 +1,13 @@
 package grupo7.models;
 
+import grupo7.models.keys.TechnicianProjectId;
+
 import jakarta.persistence.*;
 import java.io.Serializable;
 
 @Entity
 @Table(name = "technician_project")
+@IdClass(TechnicianProjectId.class)
 public class Technician_Project implements Serializable {
 
     @Id

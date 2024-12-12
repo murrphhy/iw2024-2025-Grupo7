@@ -9,32 +9,28 @@ import jakarta.persistence.*;
 public class Support {
 
     @Id
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    private Long user_id;
 
     @Id
-    @ManyToOne
-    @JoinColumn(name = "project_id")
-    private Project project;
+    private Long project_id;
 
     private int rating;
 
     // Getters y Setters
-    public User getUser() {
-        return user;
+    public Long getUserId() {
+        return user_id;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUserId(Long user_id) {
+        this.user_id = user_id;
     }
 
-    public Project getProject() {
-        return project;
+    public Long getProjectId() {
+        return project_id;
     }
 
-    public void setProject(Project project) {
-        this.project = project;
+    public void setProjectId(Long project_id) {
+        this.project_id = project_id;
     }
 
     public int getRating() {

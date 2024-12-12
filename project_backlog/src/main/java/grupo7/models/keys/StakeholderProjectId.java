@@ -5,34 +5,34 @@ import java.util.Objects;
 
 public class StakeholderProjectId implements Serializable {
 
-    private Long userId;   // user_id de la relación
-    private Long projectId; // project_id de la relación
+    private Long user_id;   // user_id de la relación
+    private Long project_id; // project_id de la relación
 
     // Constructor vacío (requerido para Serializable)
     public StakeholderProjectId() {
     }
 
     // Constructor completo
-    public StakeholderProjectId(Long userId, Long projectId) {
-        this.userId = userId;
-        this.projectId = projectId;
+    public StakeholderProjectId(Long user_id, Long project_id) {
+        this.user_id = user_id;
+        this.project_id = project_id;
     }
 
     // Getters y Setters
     public Long getUserId() {
-        return userId;
+        return user_id;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUserId(Long user_id) {
+        this.user_id = user_id;
     }
 
     public Long getProjectId() {
-        return projectId;
+        return project_id;
     }
 
-    public void setProjectId(Long projectId) {
-        this.projectId = projectId;
+    public void setProjectId(Long project_id) {
+        this.project_id = project_id;
     }
 
     // Métodos equals y hashCode (requeridos para claves compuestas)
@@ -41,11 +41,11 @@ public class StakeholderProjectId implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         StakeholderProjectId that = (StakeholderProjectId) o;
-        return Objects.equals(userId, that.userId) && Objects.equals(projectId, that.projectId);
+        return Objects.equals(user_id, that.user_id) && Objects.equals(project_id, that.project_id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userId, projectId);
+        return Objects.hash(user_id, project_id);
     }
 }

@@ -8,11 +8,21 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "name")
     private String name;
+
+    @Column(name = "email", unique = true)
     private String email;
+
+    @Column(name = "password")
     private String password;
+
+    @Column(name = "academic_position")
     private String academic_position;
-    private boolean isAdmin;
+
+    @Column(name = "is_admin")
+    private Boolean isAdmin;
 
     // Constructor vacío (para JPA)
     public User() {}
