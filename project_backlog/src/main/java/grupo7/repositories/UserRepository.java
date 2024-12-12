@@ -1,14 +1,5 @@
 package grupo7.repositories;
 
-<<<<<<< HEAD
-import grupo7.models.User;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-@Repository
-public interface UserRepository extends JpaRepository<User, Long> {
-    // Aquí puede se pueden añadir consultas personalizadas como buscar por email
-=======
 import grupo7.models.AppUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -24,5 +15,4 @@ public interface UserRepository extends JpaRepository<AppUser, Long> {
 
     Optional<AppUser> findByUsername(String username);
 
->>>>>>> main
 }

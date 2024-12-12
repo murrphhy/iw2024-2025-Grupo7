@@ -1,17 +1,5 @@
 package grupo7.services;
 
-<<<<<<< HEAD
-import grupo7.models.User;
-import grupo7.repositories.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
-
-@Service
-public class UserService {
-=======
 import grupo7.models.AppUser;
 import grupo7.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,38 +9,34 @@ import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
+import java.util.Optional;
 
 @Configuration
 public class UserService implements UserDetailsService {
->>>>>>> main
 
     @Autowired
     private UserRepository userRepository;
 
-<<<<<<< HEAD
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     // Crear un nuevo usuario
-    public User createUser(User user) {
+    public AppUser createUser(AppUser user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword())); // Encripta la contraseña
         return userRepository.save(user);
     }
 
     // Leer todos los usuarios
-    public List<User> getUsers() {
+    public List<AppUser> getUsers() {
         return userRepository.findAll();
     }
-    
+
     // Leer un usuario por ID
-    public Optional<User> getUserByID(Long id) {
+    public Optional<AppUser> getUserByID(Long id) {
         return userRepository.findById(id);
     }
-}
-=======
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
-    public List<AppUser> getAllUsers() {
-        return userRepository.findAll();
-    }
-
+    // Método de UserDetailsService
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         AppUser appUser = userRepository.findByUsername(username)
@@ -66,4 +50,3 @@ public class UserService implements UserDetailsService {
                 .build();
     }
 }
->>>>>>> main

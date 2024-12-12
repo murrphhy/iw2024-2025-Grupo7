@@ -6,10 +6,7 @@ import com.vaadin.flow.theme.Theme;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
-<<<<<<< HEAD
-=======
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
->>>>>>> main
 
 /**
  * The entry point of the Spring Boot application.
