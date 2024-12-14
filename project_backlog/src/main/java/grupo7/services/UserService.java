@@ -3,7 +3,6 @@ package grupo7.services;
 import grupo7.models.AppUser;
 import grupo7.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,12 +26,12 @@ public class UserService implements UserDetailsService {
     }
 
     // Leer todos los usuarios
-    public List<AppUser> getUsers() {
+    public List<AppUser> getAllUsers() {
         return userRepository.findAll();
     }
 
     // Leer un usuario por ID
-    public Optional<AppUser> getUserByID(Long id) {
+    public Optional<AppUser> getUserByID(String id) {
         return userRepository.findById(id);
     }
 

@@ -5,7 +5,7 @@ import grupo7.models.keys.SupportId;
 import jakarta.persistence.*;
 
 @Entity
-@IdClass(SupportId.class)  // Indica que esta clase utiliza una clave compuesta
+@IdClass(SupportId.class)  // Significa que esta clase utiliza una clave compuesta
 public class Support {
 
     @Id
@@ -15,6 +15,17 @@ public class Support {
     private Long project_id;
 
     private int rating;
+
+    // Constructor vacío
+    public Support() {
+    }
+
+    // Constructor completo
+    public Support(Long user_id, Long project_id, int rating) {
+        this.user_id = user_id;
+        this.project_id = project_id;
+        this.rating = rating;
+    }
 
     // Getters y Setters
     public Long getUserId() {

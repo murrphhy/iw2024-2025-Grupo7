@@ -12,34 +12,30 @@ import java.util.Optional;
 @Service
 public class SupportService {
 
-    private final SupportRepository supportRepository;
-
     @Autowired
-    public SupportService(SupportRepository supportRepository) {
-        this.supportRepository = supportRepository;
-    }
+    private SupportRepository supportRepository;
 
-    // Método para obtener todos los soportes
+    // Método para obtener todos los Support
     public List<Support> getAllSupports() {
         return supportRepository.findAll();
     }
 
-    // Método para obtener un soporte por ID combinado
+    // Método para obtener un Support por ID compuesto
     public Optional<Support> getSupportById(SupportId supportId) {
         return supportRepository.findById(supportId);
     }
 
-    // Método para crear o actualizar un soporte
+    // Método para crear o actualizar un Support
     public Support saveSupport(Support support) {
         return supportRepository.save(support);
     }
 
-    // Método para eliminar un soporte por ID combinado
+    // Método para eliminar un Support por ID combinado
     public void deleteSupport(SupportId supportId) {
         if (supportRepository.existsById(supportId)) {
             supportRepository.deleteById(supportId);
         } else {
-            throw new IllegalArgumentException("El soporte con el ID especificado no existe.");
+            throw new IllegalArgumentException("El Support con el ID especificado no existe.");
         }
     }
 }

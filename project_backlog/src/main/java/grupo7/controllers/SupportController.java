@@ -14,12 +14,8 @@ import java.util.Optional;
 @RequestMapping("/api/supports")
 public class SupportController {
 
-    private final SupportService supportService;
-
     @Autowired
-    public SupportController(SupportService supportService) {
-        this.supportService = supportService;
-    }
+    private SupportService supportService;
 
     // Obtener todas las relaciones Support
     @GetMapping
@@ -30,13 +26,12 @@ public class SupportController {
     // Obtener una relación Support por ID combinado
     @GetMapping("/{userId}/{projectId}")
     public ResponseEntity<Support> getSupportById(
-            @PathVariable("userId") Long userId,
-            @PathVariable("projectId") Long projectId) {
+            @PathVariable Long userId,
+            @PathVariable Long projectId) {
         SupportId supportId = new SupportId(userId, projectId);
         Optional<Support> support = supportService.getSupportById(supportId);
 
-        return support.map(ResponseEntity::ok)
-                      .orElse(ResponseEntity.notFound().build());
+        return support.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     // Crear o actualizar una relación Support
@@ -49,8 +44,8 @@ public class SupportController {
     // Eliminar una relación Support por ID combinado
     @DeleteMapping("/{userId}/{projectId}")
     public ResponseEntity<Void> deleteSupport(
-            @PathVariable("userId") Long userId,
-            @PathVariable("projectId") Long projectId) {
+            @PathVariable Long userId,
+            @PathVariable Long projectId) {
         SupportId supportId = new SupportId(userId, projectId);
         try {
             supportService.deleteSupport(supportId);

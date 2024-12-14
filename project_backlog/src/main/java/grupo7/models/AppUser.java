@@ -8,7 +8,7 @@ public class AppUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
     @Column(nullable = false)
     private String username;
@@ -26,11 +26,13 @@ public class AppUser {
     private String center;
 
     private String technical_area;
-    private boolean isAdmin;
+    private Boolean isAdmin;
 
+    // Constructor vacío
     public AppUser() {}
 
-    public AppUser(String username, String email, String password, String academicPosition, String center, String technical_area, boolean isAdmin) {
+    // Constructor con parámetros
+    public AppUser(String username, String email, String password, String academicPosition, String center, String technical_area, Boolean isAdmin) {
         this.username = username;
         this.email = email;
         this.password = password;
@@ -40,45 +42,66 @@ public class AppUser {
         this.isAdmin = isAdmin;
     }
 
-    public Long getId() {
+    // Getters y setters
+    public String getId() {
         return id;
     }
     public String getUsername() {
         return username;
     }
-    public String getEmail(){
+    public String getEmail() {
         return email;
     }
-    public boolean isAdmin() {
-        return isAdmin;
-    }
+
     public String getPassword() {
         return password;
     }
+
     public String getAcademicPosition() {
         return academicPosition;
     }
-    public String getCenter() { return center; }
-    public String getTechnicalArea() { return technical_area; }
 
+    public String getCenter() { 
+        return center; 
+    }
 
-    public void setId(Long id) {
+    public String getTechnicalArea() { 
+        return technical_area; 
+    }
+
+    public boolean getisAdmin() {
+        return isAdmin;
+    }
+
+    public void setId(String id) {
         this.id = id;
     }
-    public void setUsername(String username){
+
+    public void setUsername(String username) {
         this.username = username;
     }
-    public void setPassword(String password){
-        this.password = password;
-    }
-    public void setAcademicPosition(String academicPosition){
-        this.academicPosition = academicPosition;
-    }
-    public void setCenter(String center){ this.center = center; }
-    public void setTechnical_area(String technical_area){ this.technical_area = technical_area; }
+
     public void setEmail(String email) {
         this.email = email;
     }
-    public void setAdmin(boolean isAdmin) { this.isAdmin = isAdmin; }
 
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setAcademicPosition(String academicPosition) {
+        this.academicPosition = academicPosition;
+    }
+
+    public void setCenter(String center){ 
+        this.center = center; 
+    }
+
+    public void setTechnical_area(String technical_area){ 
+        this.technical_area = technical_area; 
+    }
+
+    public void setAdmin(boolean isAdmin) {
+        this.isAdmin = isAdmin;
+    }
 }

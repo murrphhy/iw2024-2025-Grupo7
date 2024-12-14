@@ -39,7 +39,7 @@ public class UserController {
 
     // Leer un usuario por ID
     @GetMapping("/{id}")
-    public Optional<AppUser> getUserByID(@PathVariable Long id) {
+    public Optional<AppUser> getUserByID(@PathVariable String id) {
         return userService.getUserByID(id);
     }
 }
