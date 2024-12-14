@@ -1,12 +1,12 @@
 package grupo7.models;
 
-import grupo7.models.keys.SupportId;
+import grupo7.models.keys.StakeholderProjectId;
 
 import jakarta.persistence.*;
 
 @Entity
-@IdClass(SupportId.class)  // Significa que esta clase utiliza una clave compuesta
-public class Support {
+@IdClass(StakeholderProjectId.class) // Utiliza una clave compuesta
+public class StakeholderProject {
 
     @Id
     private Long user_id;
@@ -15,17 +15,18 @@ public class Support {
     private Long project_id;
 
     @Column(nullable = false)
-    private int rating;
+    private Double financing;
 
+    
     // Constructor vacío
-    public Support() {
+    public StakeholderProject() {
     }
 
     // Constructor completo
-    public Support(Long user_id, Long project_id, int rating) {
+    public StakeholderProject(Long user_id, Long project_id, Double financing) {
         this.user_id = user_id;
         this.project_id = project_id;
-        this.rating = rating;
+        this.financing = financing;
     }
 
     // Getters y Setters
@@ -45,11 +46,11 @@ public class Support {
         this.project_id = project_id;
     }
 
-    public int getRating() {
-        return rating;
+    public Double getFinancing() {
+        return financing;
     }
 
-    public void setRating(int rating) {
-        this.rating = rating;
+    public void setFinancing(Double financing) {
+        this.financing = financing;
     }
 }

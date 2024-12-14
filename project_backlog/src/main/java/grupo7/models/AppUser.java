@@ -7,17 +7,10 @@ import jakarta.persistence.*;
 public class AppUser {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private String id;
 
     @Column(nullable = false)
     private String username;
-
-    @Column(unique= true, nullable = false)
-    private String email;
-
-    @Column(nullable = false)
-    private String password;
 
     @Column(nullable = false)
     private String academicPosition;
@@ -25,8 +18,15 @@ public class AppUser {
     @Column(nullable = false)
     private String center;
 
-    private String technical_area;
+    @Column(unique= true, nullable = false)
+    private String email;
+
     private Boolean isAdmin;
+
+    @Column(nullable = false)
+    private String password;
+
+    private String technical_area;
 
     // Constructor vacío
     public AppUser() {}
@@ -46,62 +46,64 @@ public class AppUser {
     public String getId() {
         return id;
     }
-    public String getUsername() {
-        return username;
-    }
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getAcademicPosition() {
-        return academicPosition;
-    }
-
-    public String getCenter() { 
-        return center; 
-    }
-
-    public String getTechnicalArea() { 
-        return technical_area; 
-    }
-
-    public boolean getisAdmin() {
-        return isAdmin;
-    }
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public void setUsername(String username) {
         this.username = username;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
+    public String getAcademicPosition() {
+        return academicPosition;
     }
 
     public void setAcademicPosition(String academicPosition) {
         this.academicPosition = academicPosition;
     }
 
+    public String getCenter() { 
+        return center; 
+    }
+
     public void setCenter(String center){ 
         this.center = center; 
     }
 
-    public void setTechnical_area(String technical_area){ 
-        this.technical_area = technical_area; 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public boolean getisAdmin() {
+        return isAdmin;
     }
 
     public void setAdmin(boolean isAdmin) {
         this.isAdmin = isAdmin;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getTechnicalArea() { 
+        return technical_area; 
+    }
+
+    public void setTechnical_area(String technical_area){ 
+        this.technical_area = technical_area; 
     }
 }
