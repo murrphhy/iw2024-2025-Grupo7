@@ -35,7 +35,7 @@ public class TechnicianProjectService {
         if (technicianProjectRepository.existsById(TechId)) {
             technicianProjectRepository.deleteById(TechId);
         } else {
-            throw new IllegalArgumentException("El Stakeholder con el ID especificado no existe.");
+            throw new IllegalArgumentException("El Technician con el ID.");
         }
     }
 

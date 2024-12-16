@@ -7,7 +7,8 @@ import jakarta.persistence.*;
 public class AppUser {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(nullable = false)
     private String username;
@@ -43,11 +44,11 @@ public class AppUser {
     }
 
     // Getters y setters
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -87,7 +88,7 @@ public class AppUser {
         return isAdmin;
     }
 
-    public void setAdmin(boolean isAdmin) {
+    public void setisAdmin(boolean isAdmin) {
         this.isAdmin = isAdmin;
     }
 

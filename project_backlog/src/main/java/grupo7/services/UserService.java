@@ -19,20 +19,25 @@ public class UserService implements UserDetailsService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // Crear un nuevo usuario
-    public AppUser createUser(AppUser user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword())); // Encripta la contraseña
-        return userRepository.save(user);
-    }
-
     // Leer todos los usuarios
     public List<AppUser> getAllUsers() {
         return userRepository.findAll();
     }
 
     // Leer un usuario por ID
-    public Optional<AppUser> getUserByID(String id) {
+    public Optional<AppUser> getUserById(Long id) {
         return userRepository.findById(id);
+    }
+
+    // Crear y guardar un usuario
+    public AppUser saveUser(AppUser user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword())); // Encripta la contraseña
+        return userRepository.save(user);
+    }
+
+    //Borrar un usuario
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
     }
 
     // Método de UserDetailsService

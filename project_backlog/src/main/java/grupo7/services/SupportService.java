@@ -15,22 +15,22 @@ public class SupportService {
     @Autowired
     private SupportRepository supportRepository;
 
-    // Método para obtener todos los Support
+    // Leer todos los Support
     public List<Support> getAllSupports() {
         return supportRepository.findAll();
     }
 
-    // Método para obtener un Support por ID compuesto
+    // Leer un Support por ID compuesto
     public Optional<Support> getSupportById(SupportId supportId) {
         return supportRepository.findById(supportId);
     }
 
-    // Método para crear o actualizar un Support
+    // Crear o actualizar un Support
     public Support saveSupport(Support support) {
         return supportRepository.save(support);
     }
 
-    // Método para eliminar un Support por ID combinado
+    // Eliminar un Support por ID combinado
     public void deleteSupport(SupportId supportId) {
         if (supportRepository.existsById(supportId)) {
             supportRepository.deleteById(supportId);

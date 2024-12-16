@@ -4,15 +4,16 @@ import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "projects")
+@Table(name = "Project")
 public class Project {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "applicant_id", nullable = false)
-    private Long applicantId;
+    @ManyToOne
+    @JoinColumn(name = "applicant_id", nullable = false)
+    private AppUser applicantId;
 
     @Column(columnDefinition = "TEXT")
     private String memory;
@@ -51,11 +52,11 @@ public class Project {
         this.id = id;
     }
 
-    public Long getApplicantId() {
+    public AppUser getApplicantId() {
         return applicantId;
     }
 
-    public void setApplicantId(Long applicantId) {
+    public void setApplicantId(AppUser applicantId) {
         this.applicantId = applicantId;
     }
 

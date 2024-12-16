@@ -5,6 +5,7 @@ import grupo7.models.keys.StakeholderProjectId;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "Stakeholder_Project")
 @IdClass(StakeholderProjectId.class) // Utiliza una clave compuesta
 public class StakeholderProject {
 

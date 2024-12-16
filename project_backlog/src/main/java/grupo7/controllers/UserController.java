@@ -7,17 +7,15 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
 @AnonymousAllowed
 @RestController
+@RequestMapping("/api/users")
 public class UserController {
 
     @Autowired
@@ -27,11 +25,11 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public AppUser createUser(@RequestBody AppUser usuario) {
-        return userService.createUser(usuario);
+        return userService.saveUser(usuario);
     }
 
     // Leer todos los usuarios
-    @GetMapping("/api/users")
+    @GetMapping
     public List<AppUser> getAllUsers() {
         System.out.println("Listando usuarios a través del endpoint");
         return userService.getAllUsers();
@@ -39,7 +37,39 @@ public class UserController {
 
     // Leer un usuario por ID
     @GetMapping("/{id}")
-    public Optional<AppUser> getUserByID(@PathVariable String id) {
-        return userService.getUserByID(id);
+    public ResponseEntity<AppUser> getUserById(@PathVariable Long id) {
+        Optional<AppUser> user = userService.getUserById(id);
+        return user.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
+
+    // Actualizar un usuario por ID
+    @PutMapping("/{id}")
+    public ResponseEntity<AppUser> updateUser(@PathVariable Long id, @RequestBody AppUser userDetails) {
+        Optional<AppUser> userOptional = userService.getUserById(id);
+
+        if (userOptional.isPresent()) {
+            AppUser user = userOptional.get();
+            user.setUsername(userDetails.getUsername());
+            user.setAcademicPosition(userDetails.getAcademicPosition());
+            user.setCenter(userDetails.getCenter());
+            user.setEmail(userDetails.getEmail());
+            user.setisAdmin(userDetails.getisAdmin());
+            user.setPassword(userDetails.getPassword());
+            user.setTechnical_area(userDetails.getTechnicalArea());
+            return ResponseEntity.ok(userService.saveUser(user));
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // Borrar un usario por ID
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        if (userService.getUserById(id).isPresent()) {
+            userService.deleteUser(id);
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
