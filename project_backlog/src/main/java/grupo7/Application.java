@@ -17,6 +17,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  */
 @Theme(value = "projectbacklog")
 @SpringBootApplication(scanBasePackages = "grupo7")
+@EntityScan(basePackages = "grupo7.models") // Escanea las entidades JPA
+@EnableJpaRepositories(basePackages = "grupo7.repositories") // Escanea los repositorios
 public class Application implements AppShellConfigurator {
 
     public static void main(String[] args) {
