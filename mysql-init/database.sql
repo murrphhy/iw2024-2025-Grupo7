@@ -2,6 +2,7 @@ CREATE DATABASE IF NOT EXISTS project_backlog;
 USE project_backlog;
 
 CREATE TABLE `users` (
+
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `username` VARCHAR(255) NOT NULL,
     `email` VARCHAR(255) NOT NULL UNIQUE,
