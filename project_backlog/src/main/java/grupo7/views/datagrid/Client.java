@@ -1,5 +1,8 @@
 package grupo7.views.datagrid;
 
+import jakarta.annotation.security.PermitAll;
+
+@PermitAll
 public class Client {
 
     private int id;
