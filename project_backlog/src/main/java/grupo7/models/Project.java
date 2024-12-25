@@ -43,6 +43,15 @@ public class Project {
     @Column(nullable = false, length = 100)
     private String title;
 
+    @Column(name = "strategic_alignment")
+    private Double strategicAlignment;
+
+    @Column(name = "technical_suitability")
+    private Double technicalSuitability;
+
+    @Column(name = "available_resources")
+    private Double availableResources;
+
     // Getters y Setters
     public Long getId() {
         return id;
@@ -130,6 +139,30 @@ public class Project {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public Double getStrategicAlignment() {
+        return strategicAlignment;
+    }
+
+    public void setStrategicAlignment(Double strategicAlignment) {
+        this.strategicAlignment = strategicAlignment;
+    }
+
+    public Double getTechnicalSuitability() {
+        return technicalSuitability;
+    }
+
+    public void setTechnicalSuitability(Double technicalSuitability) {
+        this.technicalSuitability = technicalSuitability;
+    }
+
+    public Double getAvailableResources() {
+        return availableResources;
+    }
+
+    public void setAvailableResources(Double availableResources) {
+        this.availableResources = availableResources;
     }
 
 }

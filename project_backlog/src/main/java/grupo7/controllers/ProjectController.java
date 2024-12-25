@@ -22,7 +22,7 @@ public class ProjectController {
     private ProjectService projectService;
 
     // Crear un nuevo proyecto
-    @PostMapping
+    @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public Project createProject(@RequestBody Project project) {
         return projectService.saveProject(project);
@@ -36,14 +36,14 @@ public class ProjectController {
     }
 
     // Leer un proyecto por ID
-    @GetMapping("/{id}")
+    @GetMapping("/read/{id}")
     public ResponseEntity<Project> getProjectById(@PathVariable Long id) {
         Optional<Project> project = projectService.getProjectById(id);
         return project.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     // Actualizar un proyecto por ID
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")
     public ResponseEntity<Project> updateProject(@PathVariable Long id, @RequestBody Project projectDetails) {
         Optional<Project> projectOptional = projectService.getProjectById(id);
 
@@ -66,7 +66,7 @@ public class ProjectController {
     }
 
     // Borrar un proyecto por ID
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
         if (projectService.getProjectById(id).isPresent()) {
             projectService.deleteProject(id);

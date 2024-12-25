@@ -22,7 +22,7 @@ public class UserController {
     private UserService userService;
 
     // Crear un nuevo usuario
-    @PostMapping
+    @PostMapping("/create/{id}")
     @ResponseStatus(HttpStatus.CREATED)
     public AppUser createUser(@RequestBody AppUser usuario) {
         return userService.saveUser(usuario);
@@ -36,14 +36,14 @@ public class UserController {
     }
 
     // Leer un usuario por ID
-    @GetMapping("/{id}")
+    @GetMapping("/read/{id}")
     public ResponseEntity<AppUser> getUserById(@PathVariable Long id) {
         Optional<AppUser> user = userService.getUserById(id);
         return user.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     // Actualizar un usuario por ID
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")
     public ResponseEntity<AppUser> updateUser(@PathVariable Long id, @RequestBody AppUser userDetails) {
         Optional<AppUser> userOptional = userService.getUserById(id);
 
@@ -63,7 +63,7 @@ public class UserController {
     }
 
     // Borrar un usario por ID
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         if (userService.getUserById(id).isPresent()) {
             userService.deleteUser(id);
