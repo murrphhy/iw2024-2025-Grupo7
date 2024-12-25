@@ -13,24 +13,27 @@ public class AppUser {
     @Column(nullable = false)
     private String username;
 
-    @Column(unique= true, nullable = false)
-    private String email;
-
-    @Column(nullable = false)
-    private String password;
-
     @Column(nullable = false)
     private String academicPosition;
 
     @Column(nullable = false)
     private String center;
 
-    private String technical_area;
-    private boolean isAdmin;
+    @Column(unique= true, nullable = false)
+    private String email;
 
+    private Boolean isAdmin;
+
+    @Column(nullable = false)
+    private String password;
+
+    private String technical_area;
+
+    // Constructor vacío
     public AppUser() {}
 
-    public AppUser(String username, String email, String password, String academicPosition, String center, String technical_area, boolean isAdmin) {
+    // Constructor con parámetros
+    public AppUser(String username, String email, String password, String academicPosition, String center, String technical_area, Boolean isAdmin) {
         this.username = username;
         this.email = email;
         this.password = password;
@@ -40,45 +43,68 @@ public class AppUser {
         this.isAdmin = isAdmin;
     }
 
+    // Getters y setters
     public Long getId() {
         return id;
     }
-    public String getUsername() {
-        return username;
-    }
-    public String getEmail(){
-        return email;
-    }
-    public boolean isAdmin() {
-        return isAdmin;
-    }
-    public String getPassword() {
-        return password;
-    }
-    public String getAcademicPosition() {
-        return academicPosition;
-    }
-    public String getCenter() { return center; }
-    public String getTechnicalArea() { return technical_area; }
-
 
     public void setId(Long id) {
         this.id = id;
     }
-    public void setUsername(String username){
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
         this.username = username;
     }
-    public void setPassword(String password){
-        this.password = password;
+
+    public String getAcademicPosition() {
+        return academicPosition;
     }
-    public void setAcademicPosition(String academicPosition){
+
+    public void setAcademicPosition(String academicPosition) {
         this.academicPosition = academicPosition;
     }
-    public void setCenter(String center){ this.center = center; }
-    public void setTechnical_area(String technical_area){ this.technical_area = technical_area; }
+
+    public String getCenter() { 
+        return center; 
+    }
+
+    public void setCenter(String center){ 
+        this.center = center; 
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
     public void setEmail(String email) {
         this.email = email;
     }
-    public void setAdmin(boolean isAdmin) { this.isAdmin = isAdmin; }
 
+    public boolean getisAdmin() {
+        return isAdmin;
+    }
+
+    public void setisAdmin(boolean isAdmin) {
+        this.isAdmin = isAdmin;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getTechnicalArea() { 
+        return technical_area; 
+    }
+
+    public void setTechnical_area(String technical_area){ 
+        this.technical_area = technical_area; 
+    }
 }
