@@ -84,9 +84,8 @@ public class AppUser {
         this.email = email;
     }
 
-    public boolean getisAdmin() {
-        return isAdmin;
-    }
+    public Boolean getIsAdmin() { return isAdmin != null ? isAdmin : false; }
+
 
     public void setisAdmin(boolean isAdmin) {
         this.isAdmin = isAdmin;
@@ -104,7 +103,7 @@ public class AppUser {
         return technical_area; 
     }
 
-    public void setTechnical_area(String technical_area){ 
+    public void setTechnicalArea(String technical_area){
         this.technical_area = technical_area; 
     }
 }

@@ -19,7 +19,7 @@ public class DBSeeder {
                 user.setEmail("user@email.com");
                 user.setAcademicPosition("Profesor");
                 user.setCenter("ESI");
-                user.setTechnical_area("Informatica");
+                user.setTechnicalArea("Informatica");
                 userRepository.save(user);
             }
         };

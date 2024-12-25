@@ -53,16 +53,15 @@ public class UserController {
             user.setAcademicPosition(userDetails.getAcademicPosition());
             user.setCenter(userDetails.getCenter());
             user.setEmail(userDetails.getEmail());
-            user.setisAdmin(userDetails.getisAdmin());
+            user.setisAdmin(userDetails.getIsAdmin());
             user.setPassword(userDetails.getPassword());
-            user.setTechnical_area(userDetails.getTechnicalArea());
+            user.setTechnicalArea(userDetails.getTechnicalArea());
             return ResponseEntity.ok(userService.saveUser(user));
         } else {
             return ResponseEntity.notFound().build();
         }
     }
 
-    // Borrar un usario por ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         if (userService.getUserById(id).isPresent()) {
