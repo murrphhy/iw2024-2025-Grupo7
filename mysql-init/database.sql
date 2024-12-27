@@ -10,10 +10,10 @@ CREATE TABLE `users` (
     `academic_position` VARCHAR(255) NULL,
     `center` VARCHAR(255) NOT NULL,
     `technical_area` VARCHAR(255) NOT NULL,
-    `isAdmin` BOOLEAN NOT NULL DEFAULT FALSE
+    `role` enum ('APPLICANT', 'TECHNICIAN', 'CIO', 'ADMINISTRATOR') NOT NULL DEFAULT 'APPLICANT'
 );
 
-CREATE TABLE `Project` (
+CREATE TABLE `project` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `applicant_id` BIGINT UNSIGNED NOT NULL,
     `promoter_id` BIGINT UNSIGNED NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE `Project` (
 );
 
 
-CREATE TABLE `Stakeholder_Project` (
+CREATE TABLE `stakeholder_project` (
     `user_id` BIGINT UNSIGNED NOT NULL,
     `project_id` BIGINT UNSIGNED NOT NULL,
     `financing` DOUBLE NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE `Stakeholder_Project` (
     FOREIGN KEY (project_id) REFERENCES Project(id)
 );
 
-CREATE TABLE `Technician_Project` (
+CREATE TABLE `technician_project` (
     `user_id` BIGINT UNSIGNED NOT NULL,
     `project_id` BIGINT UNSIGNED NOT NULL,
     `project_appraisal` BIGINT NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE `Technician_Project` (
     FOREIGN KEY (project_id) REFERENCES Project(id)
 );
 
-CREATE TABLE `Support` (
+CREATE TABLE `support` (
     `user_id` BIGINT UNSIGNED NOT NULL,
     `project_id` BIGINT UNSIGNED NOT NULL,
     `rating` INT NOT NULL,

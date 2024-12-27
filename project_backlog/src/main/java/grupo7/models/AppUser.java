@@ -2,6 +2,9 @@ package grupo7.models;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "users")
 public class AppUser {
@@ -22,25 +25,30 @@ public class AppUser {
     @Column(unique= true, nullable = false)
     private String email;
 
-    private Boolean isAdmin;
-
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
     private String technical_area;
+
+    @Column(nullable = false)
+    private Role role;
+
+    @OneToMany(mappedBy = "applicantId")
+    private List<Project> projects = new ArrayList<>();
 
     // Constructor vacío
     public AppUser() {}
 
     // Constructor con parámetros
-    public AppUser(String username, String email, String password, String academicPosition, String center, String technical_area, Boolean isAdmin) {
+    public AppUser(String username, String email, String password, String academicPosition, String center, String technical_area, Role role) {
         this.username = username;
         this.email = email;
         this.password = password;
         this.academicPosition = academicPosition;
         this.center = center;
         this.technical_area = technical_area;
-        this.isAdmin = isAdmin;
+        this.role = role;
     }
 
     // Getters y setters
@@ -84,13 +92,6 @@ public class AppUser {
         this.email = email;
     }
 
-    public Boolean getIsAdmin() { return isAdmin != null ? isAdmin : false; }
-
-
-    public void setisAdmin(boolean isAdmin) {
-        this.isAdmin = isAdmin;
-    }
-
     public String getPassword() {
         return password;
     }
@@ -103,7 +104,23 @@ public class AppUser {
         return technical_area; 
     }
 
+    public List<Project> getProjects() {
+        return projects;
+    }
+
+    public void setProjects(List<Project> projects) {
+        this.projects = projects;
+    }
+
     public void setTechnicalArea(String technical_area){
         this.technical_area = technical_area; 
+    }
+
+    public Role getRole(){
+        return role;
+    }
+
+    public void setRole(Role role){
+        this.role = role;
     }
 }

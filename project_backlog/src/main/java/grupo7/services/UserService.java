@@ -4,9 +4,12 @@ import grupo7.models.AppUser;
 import grupo7.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,17 +43,18 @@ public class UserService implements UserDetailsService {
         userRepository.deleteById(id);
     }
 
-    // Método de UserDetailsService
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        AppUser appUser = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
+    // Metodo de UserDetailsService
+    public UserDetails loadUserByUsername(String username) {
+        AppUser user = userRepository.findByUsername(username).orElseThrow();
+        List<GrantedAuthority> authorities = new ArrayList<>();
 
-        System.out.println("Usuario encontrado: " + appUser); // Log para depurar
+        // If user has role ADMINISTRATOR, add "ROLE_ADMINISTRATOR" as an authority
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
 
-        return User.builder()
-                .username(appUser.getUsername())
-                .password(appUser.getPassword())
-                .build();
+        return new org.springframework.security.core.userdetails.User(
+                user.getUsername(),
+                user.getPassword(),
+                authorities
+        );
     }
 }

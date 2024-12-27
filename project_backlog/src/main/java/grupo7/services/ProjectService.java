@@ -19,9 +19,13 @@ public class ProjectService {
         return projectRepository.findAll();
     }
 
-    // Leer un proyectos por ID
-    public Optional<Project> getProjectById(Long id) {
-        return projectRepository.findById(id);
+
+    public Optional<Project> getProjectById(Long projectId) {
+        return projectRepository.findById(projectId);
+    }
+
+    public Optional<Project> getProjectByTitle(String title) {
+        return projectRepository.findByTitle(title);
     }
 
     // Crear y guardar un proyectos
@@ -30,7 +34,7 @@ public class ProjectService {
     }
 
     //Borrar un proyecto
-    public void deleteProject(Long id) {
-        projectRepository.deleteById(id);
+    public void deleteProject(Long projectId) {
+        projectRepository.deleteById(projectId);
     }
 }

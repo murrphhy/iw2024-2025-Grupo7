@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 public class SecurityConfig extends VaadinWebSecurity {
@@ -20,13 +21,24 @@ public class SecurityConfig extends VaadinWebSecurity {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(authorize ->
-                authorize
-                        .requestMatchers("/api/users").permitAll()
-        );
+        http
+                .authorizeHttpRequests(authorize -> authorize
+                                // reglas de autorización
+                                .requestMatchers("/admin-panel/**").hasRole("ADMINISTRATOR")
+                                .requestMatchers("/logout").permitAll()
+                                .requestMatchers("/api/**").anonymous()
+                        // ...
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login")
+                        .permitAll()
+                );
 
+        // Configuración de Vaadin
         super.configure(http);
 
+        // Vista de login Vaadin
         setLoginView(http, LoginView.class);
     }
 }

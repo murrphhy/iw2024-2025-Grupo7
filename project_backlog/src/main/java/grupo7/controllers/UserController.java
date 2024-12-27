@@ -53,7 +53,7 @@ public class UserController {
             user.setAcademicPosition(userDetails.getAcademicPosition());
             user.setCenter(userDetails.getCenter());
             user.setEmail(userDetails.getEmail());
-            user.setisAdmin(userDetails.getIsAdmin());
+            user.setRole(userDetails.getRole());
             user.setPassword(userDetails.getPassword());
             user.setTechnicalArea(userDetails.getTechnicalArea());
             return ResponseEntity.ok(userService.saveUser(user));

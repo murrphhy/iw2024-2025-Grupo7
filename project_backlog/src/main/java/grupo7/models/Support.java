@@ -5,7 +5,7 @@ import grupo7.models.keys.SupportId;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "Support")
+@Table(name = "support")
 @IdClass(SupportId.class)  // Significa que esta clase utiliza una clave compuesta
 public class Support {
 

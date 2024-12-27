@@ -5,7 +5,7 @@ import grupo7.models.keys.TechnicianProjectId;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "Technician_Project")
+@Table(name = "technician_project")
 @IdClass(TechnicianProjectId.class)  // Utiliza una clave compuesta
 public class TechnicianProject {
 

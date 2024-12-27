@@ -36,16 +36,22 @@ public class ProjectController {
     }
 
     // Leer un proyecto por ID
-    @GetMapping("/{id}")
-    public ResponseEntity<Project> getProjectById(@PathVariable Long id) {
-        Optional<Project> project = projectService.getProjectById(id);
+    @GetMapping("/{projectId}")
+    public ResponseEntity<Project> getProjectId(@PathVariable Long projectId) {
+        Optional<Project> project = projectService.getProjectById(projectId);
+        return project.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/title/{title}")
+    public ResponseEntity<Project> getProjectByTitle(@PathVariable String title) {
+        Optional<Project> project = projectService.getProjectByTitle(title);
         return project.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     // Actualizar un proyecto por ID
-    @PutMapping("/{id}")
-    public ResponseEntity<Project> updateProject(@PathVariable Long id, @RequestBody Project projectDetails) {
-        Optional<Project> projectOptional = projectService.getProjectById(id);
+    @PutMapping("/{projectId}")
+    public ResponseEntity<Project> updateProject(@PathVariable Long projectId, @RequestBody Project projectDetails) {
+        Optional<Project> projectOptional = projectService.getProjectById(projectId);
 
         if (projectOptional.isPresent()) {
             Project project = projectOptional.get();
@@ -66,10 +72,10 @@ public class ProjectController {
     }
 
     // Borrar un proyecto por ID
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
-        if (projectService.getProjectById(id).isPresent()) {
-            projectService.deleteProject(id);
+    @DeleteMapping("/{projectId}")
+    public ResponseEntity<Void> deleteProject(@PathVariable Long projectId) {
+        if (projectService.getProjectById(projectId).isPresent()) {
+            projectService.deleteProject(projectId);
             return ResponseEntity.noContent().build();
         } else {
             return ResponseEntity.notFound().build();

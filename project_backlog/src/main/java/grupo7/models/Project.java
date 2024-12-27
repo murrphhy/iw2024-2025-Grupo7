@@ -4,16 +4,28 @@ import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "Project")
+@Table(name = "project")
 public class Project {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 100)
+    private String title;
+
+    @Column(name = "short_title", nullable = false, length = 50)
+    private String shortTitle;
+
     @ManyToOne
     @JoinColumn(name = "applicant_id", nullable = false)
     private AppUser applicantId;
+
+    @Column(name = "promoter_id")
+    private Long promoterId;
+
+    @Column(nullable = false)
+    private String state;
 
     @Column(columnDefinition = "TEXT")
     private String memory;
@@ -21,27 +33,19 @@ public class Project {
     @Column(name = "project_regulations", columnDefinition = "TEXT")
     private String projectRegulations;
 
-    @Column(name = "promoter_id", nullable = false)
-    private Long promoterId;
-
     @Column(nullable = false)
     private String scope;
-
-    @Column(name = "short_title", nullable = false, length = 50)
-    private String shortTitle;
 
     @Temporal(TemporalType.DATE)
     @Column(name = "start_date", nullable = false)
     private Date startDate;
 
-    @Column(nullable = false)
-    private String state;
+
 
     @Column(name = "technical_specifications", columnDefinition = "TEXT")
     private String technicalSpecifications;
 
-    @Column(nullable = false, length = 100)
-    private String title;
+
 
     // Getters y Setters
     public Long getId() {
