@@ -35,7 +35,11 @@ public class MainLayout extends AppLayout {
 
     public MainLayout(@Autowired AuthenticatedUser authenticationContext) {
 
-        logoutButton = new Button("Logout", click -> authenticationContext.logout());
+        if (authenticationContext.get().isPresent()) {
+            logoutButton = new Button("Logout", click -> authenticationContext.logout());
+        } else {
+            logoutButton = new Button("Login", click -> UI.getCurrent().navigate("login"));
+        }
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
