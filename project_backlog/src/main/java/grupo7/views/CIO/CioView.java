@@ -28,7 +28,7 @@ public class CioView extends VerticalLayout {
     private final NumberField strategicAlignmentField = new NumberField("Alineamiento Estratégico");
     private final NumberField technicalSuitabilityField = new NumberField("Idoneidad Técnica");
     private final NumberField resourcesField = new NumberField("Recursos Disponibles");
-    private final Button saveButton = new Button("Guardar Prioridad");
+    private final Button saveButton = new Button("Guardar");
 
     @Autowired
     public CioView(ProjectService projectService) {

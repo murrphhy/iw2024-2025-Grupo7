@@ -22,7 +22,7 @@ public class SecurityConfig extends VaadinWebSecurity {
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(authorize ->
                 authorize
-                        .requestMatchers("/api/**").permitAll()
+                    .requestMatchers("/api/users").permitAll()
         );
 
         super.configure(http);
