@@ -10,12 +10,10 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.auth.AnonymousAllowed;
 
 import grupo7.models.Project;
 import grupo7.models.AppUser;
 import grupo7.services.ProjectService;
-import grupo7.services.UserService;
 import grupo7.services.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -23,7 +21,6 @@ import java.util.List;
 
 @PageTitle("Cio View")
 @Route("cio-dashboard")
-@AnonymousAllowed
 @Menu(order = 3)
 public class CioView extends VerticalLayout {
 
@@ -32,7 +29,6 @@ public class CioView extends VerticalLayout {
     private final Grid<Project> projectGrid = new Grid<>(Project.class);
     private final Binder<Project> binder = new Binder<>(Project.class);
 
-    // Campos para priorización
     private final NumberField strategicAlignmentField = new NumberField("Alineamiento Estratégico");
     private final NumberField technicalSuitabilityField = new NumberField("Idoneidad Técnica");
     private final NumberField resourcesField = new NumberField("Recursos Disponibles");
