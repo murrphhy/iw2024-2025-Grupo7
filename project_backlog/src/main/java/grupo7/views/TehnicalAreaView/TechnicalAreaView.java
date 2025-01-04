@@ -4,13 +4,18 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.router.Route;
 import grupo7.models.Project;
 import grupo7.services.ProjectService;
 import grupo7.services.TechnicianProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
-import java.util.Optional;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.access.prepost.PreAuthorize;
+
+import java.util.Optional;
 
 @Route("/technical-area")
 @PreAuthorize("hasRole('TECHNICIAN')")
@@ -61,7 +66,52 @@ public class TechnicalAreaView extends VerticalLayout {
     }
 
     private void openRatingDialog(Project project) {
-        // Aquí puedes abrir un cuadro de diálogo para ingresar la puntuación técnica.
-        Notification.show("Abrir cuadro de diálogo para puntuar el proyecto: " + project.getTitle());
+        Dialog dialog = new Dialog();
+        dialog.setWidth("400px");
+        dialog.setHeight("300px");
+
+        VerticalLayout dialogLayout = new VerticalLayout();
+        dialogLayout.add("Puntuar Proyecto: " + project.getTitle());
+
+        // Campo para ingresar la puntuación
+        NumberField ratingField = new NumberField("Puntuación Técnica");
+        ratingField.setMin(0);
+        ratingField.setMax(10);
+        dialogLayout.add(ratingField);
+
+        // Botón para guardar la puntuación
+        Button saveButton = new Button("Guardar", event -> {
+            if (ratingField.getValue() != null) {
+                Double rating = ratingField.getValue();
+                saveTechnicalRating(project.getId(), rating.intValue());
+                Notification.show("Puntuación guardada: " + rating);
+                dialog.close();
+                loadProjects(); // Recargar datos en la tabla
+            } else {
+                Notification.show("Por favor, ingresa una puntuación válida.");
+            }
+        });
+
+        // Botón para cancelar
+        Button cancelButton = new Button("Cancelar", event -> dialog.close());
+
+        dialogLayout.add(saveButton, cancelButton);
+        dialog.add(dialogLayout);
+
+        dialog.open();
+    }
+
+    private void saveTechnicalRating(Long projectId, int rating) {
+        Long userId = getAuthenticatedUserId(); // Obtener el ID del usuario autenticado
+        technicianProjectService.saveTechnicalRating(userId, projectId, rating);
+    }
+
+    private Long getAuthenticatedUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            // Supongamos que el nombre del usuario autenticado es su ID
+            return Long.valueOf(authentication.getName());
+        }
+        throw new IllegalStateException("Usuario no autenticado.");
     }
 }
