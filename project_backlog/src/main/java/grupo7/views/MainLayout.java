@@ -1,7 +1,9 @@
 package grupo7.views;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Footer;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Header;
@@ -14,7 +16,11 @@ import com.vaadin.flow.router.Layout;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.server.menu.MenuConfiguration;
 import com.vaadin.flow.server.menu.MenuEntry;
+import com.vaadin.flow.spring.security.AuthenticationContext;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import grupo7.security.AuthenticatedUser;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.List;
 
 /**
@@ -25,12 +31,21 @@ import java.util.List;
 public class MainLayout extends AppLayout {
 
     private H1 viewTitle;
+    private final Button logoutButton;
 
-    public MainLayout() {
+    public MainLayout(@Autowired AuthenticatedUser authenticationContext) {
+
+        if (authenticationContext.get().isPresent()) {
+            logoutButton = new Button("Logout", click -> authenticationContext.logout());
+        } else {
+            logoutButton = new Button("Login", click -> UI.getCurrent().navigate("login"));
+        }
+
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
         addHeaderContent();
     }
+
 
     private void addHeaderContent() {
         DrawerToggle toggle = new DrawerToggle();
@@ -69,9 +84,14 @@ public class MainLayout extends AppLayout {
 
     private Footer createFooter() {
         Footer layout = new Footer();
+        layout.add(logoutButton);
+
+        layout.getStyle().set("margin-top", "auto");
+        layout.getStyle().set("margin-left", "auto");
 
         return layout;
     }
+
 
     @Override
     protected void afterNavigation() {

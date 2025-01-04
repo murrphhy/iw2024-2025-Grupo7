@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * REST controller for managing projects.
+ * Provides endpoints to create, read, update, and delete projects.
+ */
 @AnonymousAllowed
 @RestController
 @RequestMapping("/api/projects")
@@ -21,31 +25,64 @@ public class ProjectController {
     @Autowired
     private ProjectService projectService;
 
-    // Crear un nuevo proyecto
-    @PostMapping("/create")
+
+    /**
+     * Creates a new project.
+     *
+     * @param project The project to be created.
+     * @return The created project.
+     */
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Project createProject(@RequestBody Project project) {
         return projectService.saveProject(project);
     }
 
-    // Leer todos los proyectos
+    /**
+     * Retrieves a list of all projects.
+     *
+     * @return A list of all projects.
+     */
     @GetMapping
     public List<Project> getAllProjects() {
         System.out.println("Listando proyectos a través del endpoint");
         return projectService.getAllProjects();
     }
 
-    // Leer un proyecto por ID
-    @GetMapping("/read/{id}")
-    public ResponseEntity<Project> getProjectById(@PathVariable Long id) {
-        Optional<Project> project = projectService.getProjectById(id);
+    /**
+     * Retrieves a specific project by its ID.
+     *
+     * @param projectId The ID of the project to retrieve.
+     * @return A {@link ResponseEntity} containing the project if found, or a 404 Not Found status if not.
+     */
+    @GetMapping("/{projectId}")
+    public ResponseEntity<Project> getProjectId(@PathVariable Long projectId) {
+        Optional<Project> project = projectService.getProjectById(projectId);
         return project.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
-    // Actualizar un proyecto por ID
-    @PutMapping("/update/{id}")
-    public ResponseEntity<Project> updateProject(@PathVariable Long id, @RequestBody Project projectDetails) {
-        Optional<Project> projectOptional = projectService.getProjectById(id);
+    /**
+     * Retrieves a specific project by its title.
+     *
+     * @param title The title of the project to retrieve.
+     * @return A {@link ResponseEntity} containing the project if found, or a 404 Not Found status if not.
+     */
+    @GetMapping("/title/{title}")
+    public ResponseEntity<Project> getProjectByTitle(@PathVariable String title) {
+        Optional<Project> project = projectService.getProjectByTitle(title);
+        return project.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Updates a specific project by its ID.
+     *
+     * @param projectId      The ID of the project to update.
+     * @param projectDetails The details to update the project with.
+     * @return A {@link ResponseEntity} containing the updated project if successful, or a 404 Not Found status if the project does not exist.
+     */
+    @PutMapping("/{projectId}")
+    public ResponseEntity<Project> updateProject(@PathVariable Long projectId, @RequestBody Project projectDetails) {
+        Optional<Project> projectOptional = projectService.getProjectById(projectId);
 
         if (projectOptional.isPresent()) {
             Project project = projectOptional.get();
@@ -65,11 +102,17 @@ public class ProjectController {
         }
     }
 
-    // Borrar un proyecto por ID
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
-        if (projectService.getProjectById(id).isPresent()) {
-            projectService.deleteProject(id);
+
+    /**
+     * Deletes a specific project by its ID.
+     *
+     * @param projectId The ID of the project to delete.
+     * @return A {@link ResponseEntity} with a 204 No Content status if successful, or a 404 Not Found status if the project does not exist.
+     */
+    @DeleteMapping("/{projectId}")
+    public ResponseEntity<Void> deleteProject(@PathVariable Long projectId) {
+        if (projectService.getProjectById(projectId).isPresent()) {
+            projectService.deleteProject(projectId);
             return ResponseEntity.noContent().build();
         } else {
             return ResponseEntity.notFound().build();

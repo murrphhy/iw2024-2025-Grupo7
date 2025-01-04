@@ -1,6 +1,7 @@
 package grupo7.seeders;
 
 import grupo7.models.AppUser;
+import grupo7.models.Role;
 import grupo7.repositories.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -19,7 +20,8 @@ public class DBSeeder {
                 user.setEmail("user@email.com");
                 user.setAcademicPosition("Profesor");
                 user.setCenter("ESI");
-                user.setTechnical_area("Informatica");
+                user.setTechnicalArea("Informatica");
+                user.setRole(Role.valueOf("ADMINISTRATOR"));
                 userRepository.save(user);
             }
         };
