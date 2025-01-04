@@ -24,7 +24,7 @@ public class StakeholderProjectController {
     }
 
     // Obtener un StakeholderProject por ID
-    @GetMapping("/{userId}/{projectId}")
+    @GetMapping("/read/{userId}/{projectId}")
     public ResponseEntity<StakeholderProject> getStakeholderProjectById(
             @PathVariable Long userId,
             @PathVariable Long projectId) {
@@ -35,14 +35,14 @@ public class StakeholderProjectController {
     }
 
     // Crear o actualizar un StakeholderProject
-    @PostMapping
+    @PostMapping("/create/{userId}/{projectId}")
     public ResponseEntity<StakeholderProject> createOrUpdateStakeholderProject(@RequestBody StakeholderProject stakeholderProject) {
         StakeholderProject savedStakeholderProject = stakeholderProjectService.saveStakeholderProject(stakeholderProject);
         return ResponseEntity.ok(savedStakeholderProject);
     }
 
     // Eliminar un StakeholderProject por ID
-    @DeleteMapping("/{userId}/{projectId}")
+    @DeleteMapping("/delete/{userId}/{projectId}")
     public ResponseEntity<Void> deleteStakeholderProject(
             @PathVariable Long userId,
             @PathVariable Long projectId) {
