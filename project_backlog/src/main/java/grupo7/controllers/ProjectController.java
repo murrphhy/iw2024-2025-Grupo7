@@ -29,6 +29,7 @@ public class ProjectController {
     @Autowired
     private ProjectService projectService;
 
+
     /**
      * Creates a new project.
      *
@@ -104,6 +105,7 @@ public class ProjectController {
             return ResponseEntity.notFound().build();
         }
     }
+
 
     /**
      * Deletes a specific project by its ID.

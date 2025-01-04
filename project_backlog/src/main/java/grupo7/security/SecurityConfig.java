@@ -40,7 +40,6 @@ public class SecurityConfig extends VaadinWebSecurity {
                         .defaultSuccessUrl("/", true)
                         .permitAll()
                 );
-
         // Configuración de Vaadin
         super.configure(http);
 
