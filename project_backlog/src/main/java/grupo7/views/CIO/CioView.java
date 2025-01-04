@@ -13,19 +13,22 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
 import grupo7.models.Project;
+import grupo7.models.AppUser;
 import grupo7.services.ProjectService;
-import jakarta.annotation.security.PermitAll;
+import grupo7.services.UserService;
+import grupo7.services.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
 @PageTitle("Cio View")
 @Route("cio-dashboard")
+@AnonymousAllowed
 @Menu(order = 3)
-@PermitAll
 public class CioView extends VerticalLayout {
 
     private final ProjectService projectService;
+    private final EmailService emailService;
     private final Grid<Project> projectGrid = new Grid<>(Project.class);
     private final Binder<Project> binder = new Binder<>(Project.class);
 
@@ -36,8 +39,9 @@ public class CioView extends VerticalLayout {
     private final Button saveButton = new Button("Guardar");
 
     @Autowired
-    public CioView(ProjectService projectService) {
+    public CioView(ProjectService projectService, EmailService emailService) {
         this.projectService = projectService;
+        this.emailService = emailService;
 
         binder.forField(strategicAlignmentField)
           .bind(Project::getStrategicAlignment, Project::setStrategicAlignment);
@@ -94,11 +98,40 @@ public class CioView extends VerticalLayout {
     private void savePrioritization() {
         Project project = binder.getBean();
         if (project != null) {
+
+            if (project.getStrategicAlignment() != null && 
+                project.getTechnicalSuitability() != null && 
+                project.getAvailableResources() != null) {
+
+                project.setState("Puntuado");
+
+                AppUser applicant = project.getApplicantId();
+
+                if (applicant != null) {
+
+                    String email = applicant.getEmail();
+                    String subject = "Su proyecto ha sido puntuado";
+                    String message = String.format(
+                            "Estimado/a %s,\n\nSu proyecto titulado '%s' ha sido puntuado con los siguientes valores:\n" +
+                                    "- Alineamiento Estratégico: %.1f\n" +
+                                    "- Idoneidad Técnica: %.1f\n" +
+                                    "- Recursos Disponibles: %.1f\n\nGracias por su participación.",
+                            applicant.getUsername(),
+                            project.getTitle(),
+                            strategicAlignmentField.getValue(),
+                            technicalSuitabilityField.getValue(),
+                            resourcesField.getValue()
+                    );
+    
+                    emailService.sendEmail(email, subject, message);
+                }
+
+            }else{
+                project.setState("En espera");
+            }
+
             projectService.saveProject(project);
-            System.out.println("Priorización guardada: " +
-                    "Alineamiento Estratégico: " + strategicAlignmentField.getValue() +
-                    ", Idoneidad Técnica: " + technicalSuitabilityField.getValue() +
-                    ", Recursos: " + resourcesField.getValue());
+
             refreshGrid();
             clearForm();
         }
