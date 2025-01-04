@@ -82,10 +82,6 @@ public class Project {
     @Column(name = "technical_specifications", columnDefinition = "TEXT")
     private String technicalSpecifications;
 
-
-    @Column(nullable = false, length = 100)
-    private String title;
-
     @Column(name = "strategic_alignment")
     private Double strategicAlignment;
 

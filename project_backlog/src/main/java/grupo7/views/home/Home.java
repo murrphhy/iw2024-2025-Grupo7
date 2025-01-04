@@ -151,7 +151,7 @@ public class Home extends VerticalLayout {
                 newProject.setStartDate(date);
             }
 
-            newProject.setState("presentado");
+            newProject.setState("Solicitado");
 
             // Obtener el promotor seleccionado
             Promoter selectedPromoter = promoterComboBox.getValue();
