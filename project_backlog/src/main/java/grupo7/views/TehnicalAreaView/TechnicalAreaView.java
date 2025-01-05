@@ -1,4 +1,4 @@
-package grupo7.views;
+package grupo7.views.TehnicalAreaView;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
@@ -6,10 +6,13 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.router.Menu;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import grupo7.models.Project;
 import grupo7.services.ProjectService;
 import grupo7.services.TechnicianProjectService;
+import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,8 +20,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.Optional;
 
+@PageTitle("Technical-View")
 @Route("/technical-area")
-@PreAuthorize("hasRole('TECHNICIAN')")
+@Menu(order = 2)
+@RolesAllowed("TECHNICAL")
 public class TechnicalAreaView extends VerticalLayout {
 
     private final ProjectService projectService;
