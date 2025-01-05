@@ -49,7 +49,7 @@ public class Project {
     /**
      * Current state of the project (e.g., "presented", "approved"). Cannot be null.
      */
-    @Column(nullable = false)
+    @Column(name = "state")
     private String state;
 
     /**
@@ -57,13 +57,14 @@ public class Project {
      * This field is designed to accommodate PDF files.
      */
     @Lob
-    @Column(name = "memory", columnDefinition = "BLOB")
+    @Column(name = "memory", columnDefinition = "MEDIUMBLOB")
     private byte[] memory;
 
     /**
      * Project-specific regulations. This field can hold large text values.
      */
-    @Column(name = "project_regulations", columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "project_regulations", columnDefinition = "MEDIUMBLOB")
     private String projectRegulations;
 
     /**
@@ -82,7 +83,8 @@ public class Project {
     /**
      * Technical specifications of the project. This field can hold large text values.
      */
-    @Column(name = "technical_specifications", columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "technical_specifications", columnDefinition = "MEDIUMBLOB")
     private String technicalSpecifications;
 
     /**
