@@ -176,11 +176,6 @@ public class Home extends VerticalLayout {
         return fieldLayout;
     }
 
-
-
-
-
-
     private void openNewProjectDialog() {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("New Project");
