@@ -11,7 +11,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
-@EnableGlobalMethodSecurity(prePostEnabled = true) // Habilitar seguridad basada en anotaciones
 public class SecurityConfig extends VaadinWebSecurity {
 
     private final UserDetailsService userDetailsService;

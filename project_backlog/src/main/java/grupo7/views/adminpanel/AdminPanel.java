@@ -105,14 +105,13 @@ public class AdminPanel extends Div {
                         "La contraseña debe tener al menos 6 caracteres")
                 .bind(
                         user -> "",
-
                         (user, newPassword) -> {
                             if (!newPassword.isEmpty()) {
-                                PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-                                user.setPassword(passwordEncoder.encode(newPassword));
+                                user.setPassword(newPassword);
                             }
                         }
                 );
+
 
         binder.forField(positionField)
                 .asRequired("La posición académica es obligatoria")
