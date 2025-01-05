@@ -15,12 +15,14 @@ import grupo7.models.Project;
 import grupo7.models.AppUser;
 import grupo7.services.ProjectService;
 import grupo7.services.EmailService;
+import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
 @PageTitle("Cio View")
 @Route("cio-dashboard")
+@RolesAllowed("CIO")
 @Menu(order = 3)
 public class CioView extends VerticalLayout {
 
