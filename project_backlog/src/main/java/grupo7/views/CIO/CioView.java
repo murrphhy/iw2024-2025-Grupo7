@@ -33,7 +33,6 @@ public class CioView extends VerticalLayout {
     private final Grid<Project> projectGrid = new Grid<>(Project.class);
     private final Binder<Project> binder = new Binder<>(Project.class);
 
-    // Campos para priorización
     private final NumberField strategicAlignmentField = new NumberField("Alineamiento Estratégico");
     private final NumberField technicalSuitabilityField = new NumberField("Idoneidad Técnica");
     private final NumberField resourcesField = new NumberField("Recursos Disponibles");
@@ -99,37 +98,6 @@ public class CioView extends VerticalLayout {
     private void savePrioritization() {
         Project project = binder.getBean();
         if (project != null) {
-
-            if (project.getStrategicAlignment() != null && 
-                project.getTechnicalSuitability() != null && 
-                project.getAvailableResources() != null) {
-
-                project.setState("Puntuado");
-
-                AppUser applicant = project.getApplicantId();
-
-                if (applicant != null) {
-
-                    String email = applicant.getEmail();
-                    String subject = "Su proyecto ha sido puntuado";
-                    String message = String.format(
-                            "Estimado/a %s,\n\nSu proyecto titulado '%s' ha sido puntuado con los siguientes valores:\n" +
-                                    "- Alineamiento Estratégico: %.1f\n" +
-                                    "- Idoneidad Técnica: %.1f\n" +
-                                    "- Recursos Disponibles: %.1f\n\nGracias por su participación.",
-                            applicant.getUsername(),
-                            project.getTitle(),
-                            strategicAlignmentField.getValue(),
-                            technicalSuitabilityField.getValue(),
-                            resourcesField.getValue()
-                    );
-    
-                    emailService.sendEmail(email, subject, message);
-                }
-
-            }else{
-                project.setState("En espera");
-            }
 
             projectService.saveProject(project);
 
