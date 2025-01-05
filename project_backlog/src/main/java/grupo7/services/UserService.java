@@ -32,9 +32,13 @@ public class UserService implements UserDetailsService {
         return userRepository.findById(id);
     }
 
-    // Crear y guardar un usuario
     public AppUser saveUser(AppUser user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword())); // Encripta la contraseña
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        } else {
+            AppUser existingUser = userRepository.findById(user.getId()).orElseThrow();
+            user.setPassword(existingUser.getPassword());
+        }
         return userRepository.save(user);
     }
 
