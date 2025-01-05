@@ -2,6 +2,7 @@ package grupo7.services;
 
 import grupo7.models.Project;
 import grupo7.repositories.ProjectRepository;
+import grupo7.repositories.TechnicianProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,9 @@ public class ProjectService {
 
     @Autowired
     private ProjectRepository projectRepository;
+
+    @Autowired
+    private TechnicianProjectRepository technicianProjectRepository;
 
     // Leer todos los proyectos
     public List<Project> getAllProjects() {
@@ -36,5 +40,10 @@ public class ProjectService {
     //Borrar un proyecto
     public void deleteProject(Long projectId) {
         projectRepository.deleteById(projectId);
+    }
+
+    // Obtener la calificacion del cio para un proyecto
+    public Optional<Integer> getCioRating(Long projectId) {
+        return technicianProjectRepository.findCioRatingByProjectId(projectId);
     }
 }
