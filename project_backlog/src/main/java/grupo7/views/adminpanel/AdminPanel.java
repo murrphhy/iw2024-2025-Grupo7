@@ -29,7 +29,7 @@ import java.util.List;
 
 @PageTitle("Admin Panel")
 @Route("/admin-panel")
-@Menu(order = 3)
+@Menu(order = 2)
 @RolesAllowed("ADMINISTRATOR")
 public class AdminPanel extends Div {
 
