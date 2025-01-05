@@ -123,19 +123,4 @@ public class ProjectController {
         }
     }
 
-    //Obtener proyectos con nota del CIO.
-    @GetMapping("/{projectId}/details")
-    public ResponseEntity<Map<String, Object>> getProjectDetails(@PathVariable Long projectId) {
-        Optional<Project> project = projectService.getProjectById(projectId);
-
-        if (project.isPresent()) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("project", project.get());
-            response.put("cioRating", projectService.getCioRating(projectId)); // Método que devuelve la nota del CIO.
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
 }

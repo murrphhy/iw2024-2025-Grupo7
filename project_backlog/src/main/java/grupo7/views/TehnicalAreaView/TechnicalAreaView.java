@@ -50,7 +50,7 @@ public class TechnicalAreaView extends VerticalLayout {
     private void configureGrid() {
         // Añadir columnas
         projectGrid.addColumn(Project::getTitle).setHeader("Nombre del Proyecto").setSortable(true);
-        projectGrid.addColumn(project -> getCioRating(project.getId())).setHeader("Calificación del CIO");
+        projectGrid.addColumn(Project::getStrategicAlignment).setHeader("Calificación del CIO");
         projectGrid.addColumn(Project::getState).setHeader("Estado").setSortable(true);
 
         // Columna de acciones para puntuar
@@ -65,10 +65,6 @@ public class TechnicalAreaView extends VerticalLayout {
         projectGrid.setItems(projectService.getAllProjects());
     }
 
-    private String getCioRating(Long projectId) {
-        Optional<Integer> rating = projectService.getCioRating(projectId);
-        return rating.map(String::valueOf).orElse("No disponible");
-    }
 
     private void openRatingDialog(Project project) {
         Dialog dialog = new Dialog();

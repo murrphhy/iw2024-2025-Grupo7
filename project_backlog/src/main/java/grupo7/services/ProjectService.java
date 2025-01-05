@@ -42,8 +42,5 @@ public class ProjectService {
         projectRepository.deleteById(projectId);
     }
 
-    // Obtener la calificacion del cio para un proyecto
-    public Optional<Integer> getCioRating(Long projectId) {
-        return technicianProjectRepository.findCioRatingByProjectId(projectId);
-    }
+
 }

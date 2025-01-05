@@ -42,9 +42,11 @@ public class TechnicianProjectService {
     public void saveTechnicalRating(Long userId, Long projectId, int rating) {
         TechnicianProjectId id = new TechnicianProjectId(userId, projectId);
         TechnicianProject technicianProject = technicianProjectRepository.findById(id)
-                .orElse(new TechnicianProject(userId, projectId, rating));
+                .orElse(new TechnicianProject(userId, projectId, rating)); // Asegúrate de usar el constructor correcto
         technicianProject.setProjectAppraisal(rating);
         technicianProjectRepository.save(technicianProject);
     }
+
+
 
 }

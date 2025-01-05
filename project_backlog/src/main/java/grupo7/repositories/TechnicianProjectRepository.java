@@ -12,9 +12,6 @@ import java.util.Optional;
 
 @Repository
 public interface TechnicianProjectRepository extends JpaRepository<TechnicianProject, TechnicianProjectId> {
-    @Query("SELECT tp.projectAppraisal FROM TechnicianProject tp WHERE tp.project_id = :projectId")
-    Optional<Integer> findCioRatingByProjectId(Long projectId);
 
-    @Query("SELECT tp FROM TechnicianProject tp WHERE tp.projectAppraisal IS NOT NULL")
-    List<TechnicianProject> findProjectsWithCioRating();
 }
+
