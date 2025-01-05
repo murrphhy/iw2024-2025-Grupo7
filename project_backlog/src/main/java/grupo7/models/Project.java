@@ -49,7 +49,7 @@ public class Project {
     /**
      * Current state of the project (e.g., "presented", "approved"). Cannot be null.
      */
-    @Column(nullable = false)
+    @Column(name = "state")
     private String state;
 
     /**
@@ -57,7 +57,7 @@ public class Project {
      * This field is designed to accommodate PDF files.
      */
     @Lob
-    @Column(name = "memory", columnDefinition = "BLOB")
+    @Column(name = "memory", columnDefinition = "LONGBLOB")
     private byte[] memory;
 
     /**
