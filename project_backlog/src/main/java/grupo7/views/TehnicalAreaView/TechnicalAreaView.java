@@ -55,7 +55,7 @@ public class TechnicalAreaView extends VerticalLayout {
 
         // Columna de acciones para puntuar
         projectGrid.addComponentColumn(project -> {
-            Button rateButton = new Button("Puntuar");
+            Button rateButton = new Button("Evaluar");
             rateButton.addClickListener(click -> openRatingDialog(project));
             return rateButton;
         }).setHeader("Acciones");
