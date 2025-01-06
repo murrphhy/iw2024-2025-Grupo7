@@ -18,6 +18,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 
+/**
+ * Vista de área técnica para técnicos.
+ * Permite listar proyectos y evaluarlos técnicamente con una puntuación.
+ */
 @PageTitle("Technical-View")
 @Route("/technical-area")
 @Menu(order = 2)
@@ -26,9 +30,14 @@ public class TechnicalAreaView extends VerticalLayout {
 
     private final ProjectService projectService;
     private final TechnicianProjectService technicianProjectService;
-
     private final Grid<Project> projectGrid;
 
+    /**
+     * Constructor de la vista de área técnica.
+     *
+     * @param projectService           Servicio para gestionar proyectos.
+     * @param technicianProjectService Servicio para gestionar evaluaciones técnicas de proyectos.
+     */
     @Autowired
     public TechnicalAreaView(ProjectService projectService, TechnicianProjectService technicianProjectService) {
         this.projectService = projectService;
@@ -45,13 +54,15 @@ public class TechnicalAreaView extends VerticalLayout {
         loadProjects();
     }
 
+    /**
+     * Configura la tabla que muestra los proyectos, incluyendo columnas y acciones.
+     */
     private void configureGrid() {
-        // Añadir columnas
         projectGrid.addColumn(Project::getTitle).setHeader("Nombre del Proyecto").setSortable(true);
         projectGrid.addColumn(Project::getStrategicAlignment).setHeader("Calificación del CIO");
         projectGrid.addColumn(Project::getState).setHeader("Estado").setSortable(true);
 
-        // Columna de acciones para puntuar
+        // Columna de acciones para puntuar proyectos
         projectGrid.addComponentColumn(project -> {
             Button rateButton = new Button("Evaluar");
             rateButton.addClickListener(click -> openRatingDialog(project));
@@ -59,45 +70,50 @@ public class TechnicalAreaView extends VerticalLayout {
         }).setHeader("Acciones");
     }
 
+    /**
+     * Carga la lista de proyectos en la tabla desde el servicio de proyectos.
+     */
     private void loadProjects() {
         projectGrid.setItems(projectService.getAllProjects());
     }
 
-
+    /**
+     * Abre un cuadro de diálogo para evaluar un proyecto técnicamente.
+     *
+     * @param project Proyecto a evaluar.
+     */
     private void openRatingDialog(Project project) {
         Dialog dialog = new Dialog();
         dialog.setWidth("600px");
         dialog.setHeight("400px");
 
-        // Layout principal para el modal
+        // Layout principal del diálogo
         VerticalLayout dialogLayout = new VerticalLayout();
         dialogLayout.setPadding(false);
         dialogLayout.setSpacing(false);
         dialogLayout.setSizeFull();
 
-        // Contenedor para la información del proyecto (scrollable)
+        // Contenedor de información del proyecto
         VerticalLayout projectInfoLayout = new VerticalLayout();
         projectInfoLayout.setPadding(true);
         projectInfoLayout.setSpacing(true);
         projectInfoLayout.setSizeFull();
-        projectInfoLayout.getStyle().set("overflow-y", "auto"); // Habilitar scroll vertical
+        projectInfoLayout.getStyle().set("overflow-y", "auto");
 
-        // Añadir información del proyecto
+        // Información del proyecto
         projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Título: " + project.getTitle()));
         projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Promotor/a: " + project.getPromoterId()));
         projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Alcance: " + project.getScope()));
         projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Fecha de comienzo: " + project.getStartDate()));
-        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Memoria: " + project.getMemory())); //Archivo PDF, que haya un boton para descargarla
-        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Especificaciones técnicas: " + project.getTechnicalSpecifications())); //Archivo PDF, que haya un boton para descargarla
-        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Regulaciones del proyecto: " + project.getProjectRegulations())); //Archivo PDF, que haya un boton para descargarla
+        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Memoria: " + project.getMemory())); // Archivo PDF
+        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Especificaciones técnicas: " + project.getTechnicalSpecifications())); // Archivo PDF
+        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Regulaciones del proyecto: " + project.getProjectRegulations())); // Archivo PDF
 
-
-
-        // Contenedor fijo para controles (campo y botones)
+        // Controles del cuadro de diálogo
         VerticalLayout controlsLayout = new VerticalLayout();
         controlsLayout.setPadding(true);
         controlsLayout.setSpacing(true);
-        controlsLayout.getStyle().set("border-top", "1px solid #ccc"); // Separador visual
+        controlsLayout.getStyle().set("border-top", "1px solid #ccc");
 
         // Campo para ingresar la puntuación
         NumberField ratingField = new NumberField("Puntuación Técnica");
@@ -105,44 +121,52 @@ public class TechnicalAreaView extends VerticalLayout {
         ratingField.setMax(10);
         controlsLayout.add(ratingField);
 
-        // Botón para guardar la puntuación
+        // Botones
         Button saveButton = new Button("Guardar", event -> {
             if (ratingField.getValue() != null) {
                 Double rating = ratingField.getValue();
                 saveTechnicalRating(project.getId(), rating.intValue());
                 Notification.show("Puntuación guardada: " + rating);
                 dialog.close();
-                loadProjects(); // Recargar datos en la tabla
+                loadProjects(); // Recargar proyectos
             } else {
                 Notification.show("Por favor, ingresa una puntuación válida.");
             }
         });
 
-        // Botón para cancelar
         Button cancelButton = new Button("Cancelar", event -> dialog.close());
 
-        // Agregar botones al contenedor fijo
+        // Añadir botones a los controles
         controlsLayout.add(saveButton, cancelButton);
 
-        // Combinar las secciones
-        dialogLayout.addAndExpand(projectInfoLayout); // Expandible (scrollable)
-        dialogLayout.add(controlsLayout); // Fijo
+        // Añadir secciones al cuadro de diálogo
+        dialogLayout.addAndExpand(projectInfoLayout);
+        dialogLayout.add(controlsLayout);
 
         dialog.add(dialogLayout);
         dialog.open();
     }
 
-
-
+    /**
+     * Guarda la puntuación técnica para un proyecto específico.
+     *
+     * @param projectId ID del proyecto a evaluar.
+     * @param rating    Puntuación técnica asignada.
+     */
     private void saveTechnicalRating(Long projectId, int rating) {
-        Long userId = getAuthenticatedUserId(); // Obtener el ID del usuario autenticado
+        Long userId = getAuthenticatedUserId();
         technicianProjectService.saveTechnicalRating(userId, projectId, rating);
     }
 
+    /**
+     * Obtiene el ID del usuario autenticado.
+     *
+     * @return ID del usuario autenticado.
+     * @throws IllegalStateException Si no hay un usuario autenticado.
+     */
     private Long getAuthenticatedUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
-            // Supongamos que el nombre del usuario autenticado es su ID
             return Long.valueOf(authentication.getName());
         }
         throw new IllegalStateException("Usuario no autenticado.");
