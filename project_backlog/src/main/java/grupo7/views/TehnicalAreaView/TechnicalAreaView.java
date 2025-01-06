@@ -68,17 +68,44 @@ public class TechnicalAreaView extends VerticalLayout {
 
     private void openRatingDialog(Project project) {
         Dialog dialog = new Dialog();
-        dialog.setWidth("400px");
-        dialog.setHeight("300px");
+        dialog.setWidth("600px");
+        dialog.setHeight("400px");
 
+        // Layout principal para el modal
         VerticalLayout dialogLayout = new VerticalLayout();
-        dialogLayout.add("Puntuar Proyecto: " + project.getTitle());
+        dialogLayout.setPadding(false);
+        dialogLayout.setSpacing(false);
+        dialogLayout.setSizeFull();
+
+        // Contenedor para la información del proyecto (scrollable)
+        VerticalLayout projectInfoLayout = new VerticalLayout();
+        projectInfoLayout.setPadding(true);
+        projectInfoLayout.setSpacing(true);
+        projectInfoLayout.setSizeFull();
+        projectInfoLayout.getStyle().set("overflow-y", "auto"); // Habilitar scroll vertical
+
+        // Añadir información del proyecto
+        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Título: " + project.getTitle()));
+        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Promotor/a: " + project.getPromoterId()));
+        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Alcance: " + project.getScope()));
+        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Fecha de comienzo: " + project.getStartDate()));
+        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Memoria: " + project.getMemory())); //Archivo PDF, que haya un boton para descargarla
+        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Especificaciones técnicas: " + project.getTechnicalSpecifications())); //Archivo PDF, que haya un boton para descargarla
+        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Regulaciones del proyecto: " + project.getProjectRegulations())); //Archivo PDF, que haya un boton para descargarla
+
+
+
+        // Contenedor fijo para controles (campo y botones)
+        VerticalLayout controlsLayout = new VerticalLayout();
+        controlsLayout.setPadding(true);
+        controlsLayout.setSpacing(true);
+        controlsLayout.getStyle().set("border-top", "1px solid #ccc"); // Separador visual
 
         // Campo para ingresar la puntuación
         NumberField ratingField = new NumberField("Puntuación Técnica");
         ratingField.setMin(0);
         ratingField.setMax(10);
-        dialogLayout.add(ratingField);
+        controlsLayout.add(ratingField);
 
         // Botón para guardar la puntuación
         Button saveButton = new Button("Guardar", event -> {
@@ -96,11 +123,18 @@ public class TechnicalAreaView extends VerticalLayout {
         // Botón para cancelar
         Button cancelButton = new Button("Cancelar", event -> dialog.close());
 
-        dialogLayout.add(saveButton, cancelButton);
-        dialog.add(dialogLayout);
+        // Agregar botones al contenedor fijo
+        controlsLayout.add(saveButton, cancelButton);
 
+        // Combinar las secciones
+        dialogLayout.addAndExpand(projectInfoLayout); // Expandible (scrollable)
+        dialogLayout.add(controlsLayout); // Fijo
+
+        dialog.add(dialogLayout);
         dialog.open();
     }
+
+
 
     private void saveTechnicalRating(Long projectId, int rating) {
         Long userId = getAuthenticatedUserId(); // Obtener el ID del usuario autenticado
