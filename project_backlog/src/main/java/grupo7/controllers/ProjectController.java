@@ -114,7 +114,7 @@ public class ProjectController {
         if (projectService.getProjectById(projectId).isPresent()) {
             projectService.deleteProject(projectId);
             return ResponseEntity.noContent().build();
-        } else {<<<<<<< 23-updating-home-view
+        } else {
 
             return ResponseEntity.notFound().build();
         }
