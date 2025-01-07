@@ -10,6 +10,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.i18n.I18NProvider;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -40,7 +41,7 @@ public class CioView extends VerticalLayout {
     private final Button saveButton = new Button("Guardar");
 
     @Autowired
-    public CioView(ProjectService projectService, EmailService emailService) {
+    public CioView(ProjectService projectService, EmailService emailService, I18NProvider i18nProvider) {
         this.projectService = projectService;
         this.emailService = emailService;
 
