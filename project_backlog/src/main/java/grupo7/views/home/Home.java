@@ -192,13 +192,13 @@ public class Home extends VerticalLayout {
         if (project.getProjectRegulations() != null && project.getProjectRegulations().length > 0) {
             detailsLayout.add(createDownloadField(getTranslation("button.download.Regulations"), project.getProjectRegulations(), project.getShortTitle() + "_project_regulations.pdf"));
         } else {
-            detailsLayout.add(createNoFileMessage(getTranslation("no.file.uploaded")));
+            detailsLayout.add(createNoFileMessage(getTranslation("project.regulations")));
         }
 
         if (project.getTechnicalSpecifications() != null && project.getTechnicalSpecifications().length > 0) {
             detailsLayout.add(createDownloadField(getTranslation("button.download.Specifications"), project.getTechnicalSpecifications(), project.getShortTitle() + "_technical_specifications.pdf"));
         } else {
-            detailsLayout.add(createNoFileMessage(getTranslation("no.file.uploaded")));
+            detailsLayout.add(createNoFileMessage(getTranslation("technical.specifications")));
         }
 
         Button closeButton = new Button(getTranslation("button.close"), event -> dialog.close());

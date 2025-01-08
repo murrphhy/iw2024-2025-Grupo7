@@ -231,8 +231,8 @@ public class TechnicalAreaView extends VerticalLayout {
                         financialResources,
                         technicalResources
                 );
-                Notification.show(getTranslation("notification.savedEvaluation", rating, humanResources, financialResources, technicalResources));
-                /*Notification.show("Evaluación guardada: Puntuación " + rating + ", Recursos Humanos " + humanResources + ", Recursos Financieros " + financialResources + ", Recursos Técnicos " + technicalResources);*/
+                
+                Notification.show(getTranslation("notification.savedEvaluation1") + rating + ", " + getTranslation("notification.savedEvaluation2")  + humanResources + ", " + getTranslation("notification.savedEvaluation3") + financialResources + ", "+ getTranslation("notification.savedEvaluation4") + technicalResources);
                 dialog.close();
                 loadProjects(); // Recargar proyectos
                 refreshGrid();

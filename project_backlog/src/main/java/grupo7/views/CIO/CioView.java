@@ -50,8 +50,6 @@ import java.util.stream.Collectors;
 @Menu(order = 3)
 public class CioView extends VerticalLayout {
 
-    private final TechnicianProjectService technicianProjectService;
-    private final TechnicianProject technicianProject;
     private final ProjectService projectService;
     private final EmailService emailService;
     private final Grid<Project> projectGrid = new Grid<>(Project.class);
@@ -175,20 +173,6 @@ private void showProjectDetailsDialog(Project project) {
     detailsLayout.add(new Paragraph(getTranslation("date") + ": " + 
         (project.getStartDate() != null ? project.getStartDate().toString() : getTranslation("notAvailable"))));
 
-    technicianProject=technicianProjectService.getTechnicianProjectById(project.getId());
-
-    if (technicianProject != null) {
-        detailsLayout.add(new Paragraph(getTranslation("financialResources") + ": " + 
-            (technicianProject.getFinancialResources() != null ? technicianProject.getFinancialResources().toString() : getTranslation("notAvailable"))));
-        detailsLayout.add(new Paragraph(getTranslation("humanResources") + ": " + 
-            technicianProject.getHumanResources()));
-        detailsLayout.add(new Paragraph(getTranslation("projectAppraisal") + ": " + 
-            (technicianProject.getProjectAppraisal() != null ? technicianProject.getProjectAppraisal().toString() : getTranslation("notAvailable"))));
-        detailsLayout.add(new Paragraph(getTranslation("technicalResources") + ": " + 
-            (technicianProject.getTechnicalResources() != null ? technicianProject.getTechnicalResources() : getTranslation("notAvailable"))));
-    } else {
-        detailsLayout.add(new Paragraph(getTranslation("noTechnicianProjectDetails")));
-    }
 
     // Botones de acción
     Button acceptButton = new Button(getTranslation("accept"), event -> {
