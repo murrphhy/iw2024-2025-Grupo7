@@ -181,6 +181,7 @@ public class CioView extends VerticalLayout {
         Project project = binder.getBean();
         if (project != null) {
 
+
             if (project.getStrategicAlignment() != null) {
 
                 project.setState("Puntuado");
@@ -205,7 +206,6 @@ public class CioView extends VerticalLayout {
             }else{
                 project.setState("En espera");
             }
-
             projectService.saveProject(project);
 
             refreshGrid();
