@@ -34,6 +34,7 @@ import java.util.List;
 public class CioView extends VerticalLayout {
 
     private final ProjectService projectService;
+    private final EmailService emailService;
     private final Grid<Project> projectGrid = new Grid<>(Project.class);
     private final Binder<Project> binder = new Binder<>(Project.class);
 
@@ -43,6 +44,7 @@ public class CioView extends VerticalLayout {
     @Autowired
     public CioView(ProjectService projectService, EmailService emailService, I18NProvider i18nProvider) {
         this.projectService = projectService;
+        this.emailService = emailService;
 
         binder.forField(strategicAlignmentField)
                 .bind(Project::getStrategicAlignment, Project::setStrategicAlignment);
@@ -181,6 +183,32 @@ public class CioView extends VerticalLayout {
     private void savePrioritization() {
         Project project = binder.getBean();
         if (project != null) {
+
+
+            if (project.getStrategicAlignment() != null) {
+
+                project.setState("Puntuado");
+
+                AppUser applicant = project.getApplicantId();
+
+                if (applicant != null) {
+
+                    String email = applicant.getEmail();
+                    String subject = "Su proyecto ha sido puntuado";
+                    String message = String.format(
+                            "Estimado/a %s,\n\nSu proyecto titulado '%s' ha sido puntuado con el siguiente valor:\n" +
+                                    "- Alineamiento Estratégico: %.1f\n\nGracias por su participación.",
+                            applicant.getUsername(),
+                            project.getTitle(),
+                            strategicAlignmentField.getValue()
+                    );
+    
+                    emailService.sendEmail(email, subject, message);
+                }
+
+            }else{
+                project.setState("En espera");
+            }
             projectService.saveProject(project);
             refreshGrid();
             clearForm();

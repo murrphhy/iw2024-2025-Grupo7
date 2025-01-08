@@ -13,6 +13,8 @@
     <properties>
         <java.version>21</java.version>
         <vaadin.version>24.5.3</vaadin.version>
+        <sonar.organization>murrphhy</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
     <parent>
@@ -84,6 +86,7 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-testbench-junit5</artifactId>

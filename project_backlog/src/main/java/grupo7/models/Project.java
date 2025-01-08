@@ -65,7 +65,7 @@ public class Project {
      */
     @Lob
     @Column(name = "project_regulations", columnDefinition = "MEDIUMBLOB")
-    private String projectRegulations;
+    private byte[] projectRegulations;
 
     /**
      * Scope of the project (e.g., "local", "regional", "international"). Cannot be null.
@@ -85,7 +85,7 @@ public class Project {
      */
     @Lob
     @Column(name = "technical_specifications", columnDefinition = "MEDIUMBLOB")
-    private String technicalSpecifications;
+    private byte[] technicalSpecifications;
 
     /**
      * Strategic alignment score of the project.
@@ -238,7 +238,7 @@ public class Project {
      *
      * @return the project's regulations
      */
-    public String getProjectRegulations() {
+    public byte[] getProjectRegulations() {
         return projectRegulations;
     }
 
@@ -247,7 +247,7 @@ public class Project {
      *
      * @param projectRegulations the new regulations
      */
-    public void setProjectRegulations(String projectRegulations) {
+    public void setProjectRegulations(byte[] projectRegulations) {
         this.projectRegulations = projectRegulations;
     }
 
@@ -292,7 +292,7 @@ public class Project {
      *
      * @return the project's technical specifications
      */
-    public String getTechnicalSpecifications() {
+    public byte[] getTechnicalSpecifications() {
         return technicalSpecifications;
     }
 
@@ -301,7 +301,7 @@ public class Project {
      *
      * @param technicalSpecifications the new technical specifications
      */
-    public void setTechnicalSpecifications(String technicalSpecifications) {
+    public void setTechnicalSpecifications(byte[] technicalSpecifications) {
         this.technicalSpecifications = technicalSpecifications;
     }
 
