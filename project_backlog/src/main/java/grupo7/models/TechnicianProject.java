@@ -32,7 +32,7 @@ public class TechnicianProject {
      * Cannot be null.
      */
     @Column(nullable = false)
-    private Integer projectAppraisal;
+    private Double projectAppraisal;
 
     /**
      * Default constructor required by JPA.
@@ -47,7 +47,7 @@ public class TechnicianProject {
      * @param project_id       the ID of the project
      * @param projectAppraisal the appraisal value given by the technician
      */
-    public TechnicianProject(Long user_id, Long project_id, Integer projectAppraisal) {
+    public TechnicianProject(Long user_id, Long project_id, Double projectAppraisal) {
         this.user_id = user_id;
         this.project_id = project_id;
         this.projectAppraisal = projectAppraisal;
@@ -94,7 +94,7 @@ public class TechnicianProject {
      *
      * @return the appraisal value
      */
-    public Integer getProjectAppraisal() {
+    public Double getProjectAppraisal() {
         return projectAppraisal;
     }
 
@@ -103,7 +103,7 @@ public class TechnicianProject {
      *
      * @param projectAppraisal the new appraisal value
      */
-    public void setProjectAppraisal(Integer projectAppraisal) {
+    public void setProjectAppraisal(Double projectAppraisal) {
         this.projectAppraisal = projectAppraisal;
     }
 }

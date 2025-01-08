@@ -2,6 +2,8 @@ package grupo7.views.TehnicalAreaView;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
@@ -9,6 +11,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
 import grupo7.models.Project;
 import grupo7.services.ProjectService;
 import grupo7.services.TechnicianProjectService;
@@ -16,6 +19,8 @@ import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.io.ByteArrayInputStream;
 
 
 /**
@@ -54,6 +59,58 @@ public class TechnicalAreaView extends VerticalLayout {
         loadProjects();
     }
 
+    private VerticalLayout createDownloadField(String label, byte[] fileContent, String fileName) {
+        VerticalLayout fieldLayout = new VerticalLayout();
+        fieldLayout.setSpacing(false);
+        fieldLayout.setPadding(false);
+
+        Paragraph labelComponent = new Paragraph(label);
+        labelComponent.getStyle()
+                .set("color", "darkgray")
+                .set("font-weight", "bold")
+                .set("margin-bottom", "0")
+                .set("text-align", "left");
+
+        StreamResource resource = new StreamResource(
+                fileName,
+                () -> new ByteArrayInputStream(fileContent)
+        );
+        resource.setContentType("application/pdf"); // Adjust the type according to the file
+
+        Anchor downloadLink = new Anchor(resource, "Descargar " + label);
+        downloadLink.getElement().setAttribute("download", true);
+        downloadLink.getStyle().set("margin-top", "5px");
+        downloadLink.getStyle().set("display", "inline-block");
+
+        fieldLayout.add(labelComponent, downloadLink);
+
+        return fieldLayout;
+    }
+
+
+    private VerticalLayout createNoFileMessage(String label) {
+        VerticalLayout fieldLayout = new VerticalLayout();
+        fieldLayout.setSpacing(false);
+        fieldLayout.setPadding(false);
+
+        Paragraph labelComponent = new Paragraph(label);
+        labelComponent.getStyle()
+                .set("color", "darkgray")
+                .set("font-weight", "bold")
+                .set("margin-bottom", "0")
+                .set("text-align", "left");
+
+        Paragraph noFileMessage = new Paragraph("No se ha subido ningún archivo.");
+        noFileMessage.getStyle()
+                .set("font-size", "16px")
+                .set("font-weight", "normal")
+                .set("margin-top", "5px");
+
+        fieldLayout.add(labelComponent, noFileMessage);
+        return fieldLayout;
+    }
+
+
     /**
      * Configura la tabla que muestra los proyectos, incluyendo columnas y acciones.
      */
@@ -62,12 +119,18 @@ public class TechnicalAreaView extends VerticalLayout {
         projectGrid.addColumn(Project::getStrategicAlignment).setHeader("Calificación del CIO");
         projectGrid.addColumn(Project::getState).setHeader("Estado").setSortable(true);
 
-        // Columna de acciones para puntuar proyectos
+
         projectGrid.addComponentColumn(project -> {
             Button rateButton = new Button("Evaluar");
+
+            // Habilitar el botón solo si el estado del proyecto es "alineado"
+            rateButton.setEnabled("alineado".equalsIgnoreCase(project.getState()));
+
             rateButton.addClickListener(click -> openRatingDialog(project));
+
             return rateButton;
         }).setHeader("Acciones");
+
     }
 
     /**
@@ -84,8 +147,8 @@ public class TechnicalAreaView extends VerticalLayout {
      */
     private void openRatingDialog(Project project) {
         Dialog dialog = new Dialog();
-        dialog.setWidth("600px");
-        dialog.setHeight("400px");
+        dialog.setWidth("65%");
+        dialog.setHeight("75%");
 
         // Layout principal del diálogo
         VerticalLayout dialogLayout = new VerticalLayout();
@@ -105,9 +168,21 @@ public class TechnicalAreaView extends VerticalLayout {
         projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Promotor/a: " + project.getPromoterId()));
         projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Alcance: " + project.getScope()));
         projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Fecha de comienzo: " + project.getStartDate()));
-        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Memoria: " + project.getMemory())); // Archivo PDF
-        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Especificaciones técnicas: " + project.getTechnicalSpecifications())); // Archivo PDF
-        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Regulaciones del proyecto: " + project.getProjectRegulations())); // Archivo PDF
+        // Download Memory file if exists
+        projectInfoLayout.add(createDownloadField("Memoria", project.getMemory(), project.getShortTitle() + "_memory.pdf"));
+
+        // Add buttons for Project Regulations and Technical Specifications
+        if (project.getProjectRegulations() != null && project.getProjectRegulations().length > 0) {
+            projectInfoLayout.add(createDownloadField("Regulaciones del Proyecto", project.getProjectRegulations(), project.getShortTitle() + "_project_regulations.pdf"));
+        } else {
+            projectInfoLayout.add(createNoFileMessage("Regulaciones del Proyecto"));
+        }
+
+        if (project.getTechnicalSpecifications() != null && project.getTechnicalSpecifications().length > 0) {
+            projectInfoLayout.add(createDownloadField("Especificaciones Técnicas", project.getTechnicalSpecifications(), project.getShortTitle() + "_technical_specifications.pdf"));
+        } else {
+            projectInfoLayout.add(createNoFileMessage("Especificaciones Técnicas"));
+        }
 
         // Controles del cuadro de diálogo
         VerticalLayout controlsLayout = new VerticalLayout();
@@ -125,7 +200,7 @@ public class TechnicalAreaView extends VerticalLayout {
         Button saveButton = new Button("Guardar", event -> {
             if (ratingField.getValue() != null) {
                 Double rating = ratingField.getValue();
-                saveTechnicalRating(project.getId(), rating.intValue());
+                technicianProjectService.saveTechnicalRating(project.getApplicantId().getId(),project.getId(),rating);
                 Notification.show("Puntuación guardada: " + rating);
                 dialog.close();
                 loadProjects(); // Recargar proyectos
@@ -147,16 +222,6 @@ public class TechnicalAreaView extends VerticalLayout {
         dialog.open();
     }
 
-    /**
-     * Guarda la puntuación técnica para un proyecto específico.
-     *
-     * @param projectId ID del proyecto a evaluar.
-     * @param rating    Puntuación técnica asignada.
-     */
-    private void saveTechnicalRating(Long projectId, int rating) {
-        Long userId = getAuthenticatedUserId();
-        technicianProjectService.saveTechnicalRating(userId, projectId, rating);
-    }
 
     /**
      * Obtiene el ID del usuario autenticado.
@@ -171,4 +236,6 @@ public class TechnicalAreaView extends VerticalLayout {
         }
         throw new IllegalStateException("Usuario no autenticado.");
     }
+
+
 }
