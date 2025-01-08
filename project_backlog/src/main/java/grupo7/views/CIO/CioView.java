@@ -45,7 +45,7 @@ public class CioView extends VerticalLayout {
         this.emailService = emailService;
 
         binder.forField(strategicAlignmentField)
-          .bind(Project::getStrategicAlignment, Project::setStrategicAlignment);
+                .bind(Project::getStrategicAlignment, Project::setStrategicAlignment);
 
         // Configurar layout
         setSizeFull();
@@ -58,24 +58,24 @@ public class CioView extends VerticalLayout {
         projectGrid.removeAllColumns();
 
         projectGrid.addColumn(project -> project.getApplicantId() != null ? project.getApplicantId().getUsername() : "N/A")
-               .setHeader("Solicitante")
-               .setSortable(true);
+                .setHeader("Solicitante")
+                .setSortable(true);
 
         projectGrid.addColumn(Project::getShortTitle)
-               .setHeader("Título corto")
-               .setSortable(true);
+                .setHeader("Título corto")
+                .setSortable(true);
 
         projectGrid.addColumn(Project::getState)
-               .setHeader("Estado")
-               .setSortable(true);
+                .setHeader("Estado")
+                .setSortable(true);
 
         projectGrid.addColumn(project -> project.getStartDate() != null ? project.getStartDate().toString() : "N/A")
-               .setHeader("Fecha")
-               .setSortable(true);
-        
+                .setHeader("Fecha")
+                .setSortable(true);
+
         projectGrid.asSingleSelect().addValueChangeListener(event -> editProject(event.getValue()));
         projectGrid.addItemDoubleClickListener(event -> openProjectDetailsDialog(event.getItem()));
-        
+
         return projectGrid;
     }
 
@@ -199,7 +199,7 @@ public class CioView extends VerticalLayout {
                             project.getTitle(),
                             strategicAlignmentField.getValue()
                     );
-    
+
                     emailService.sendEmail(email, subject, message);
                 }
 
