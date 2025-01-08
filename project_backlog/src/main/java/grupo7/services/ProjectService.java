@@ -251,7 +251,17 @@ public class ProjectService {
     }
 
 
-
+    /**
+     * Retrieves projects associated with a specific user ID.
+     *
+     * @param userId the ID of the user.
+     * @return a list of projects associated with the user.
+     */
+    public List<Project> getProjectsByUserId(Long userId) {
+        return projectRepository.findAll().stream()
+                .filter(project -> project.getApplicantId() != null && project.getApplicantId().getId().equals(userId))
+                .toList();
+    }
 
 
 }
