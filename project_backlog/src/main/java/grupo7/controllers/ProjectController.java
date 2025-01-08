@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
+import java.util.Map;
+import java.util.HashMap;
+
+
 /**
  * REST controller for managing projects.
  * Provides endpoints to create, read, update, and delete projects.
@@ -119,4 +123,20 @@ public class ProjectController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    //Obtener proyectos con nota del CIO.
+    @GetMapping("/{projectId}/details")
+    public ResponseEntity<Map<String, Object>> getProjectDetails(@PathVariable Long projectId) {
+        Optional<Project> project = projectService.getProjectById(projectId);
+
+        if (project.isPresent()) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("project", project.get());
+            response.put("cioRating", projectService.getCioRating(projectId)); // Método que devuelve la nota del CIO.
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }

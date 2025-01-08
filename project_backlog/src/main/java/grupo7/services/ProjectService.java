@@ -5,6 +5,7 @@ import grupo7.models.Project;
 import grupo7.models.Role;
 import grupo7.repositories.ProjectRepository;
 import grupo7.repositories.UserRepository;
+import grupo7.repositories.TechnicianProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +35,8 @@ public class ProjectService {
      *
      * @return a list of all projects.
      */
+    private TechnicianProjectRepository technicianProjectRepository;
+
     public List<Project> getAllProjects() {
         return projectRepository.findAll();
     }
@@ -245,5 +248,10 @@ public class ProjectService {
      */
     public void deleteProject(Long projectId) {
         projectRepository.deleteById(projectId);
+    }
+
+    // Obtener la calificacion del cio para un proyecto
+    public Optional<Integer> getCioRating(Long projectId) {
+        return technicianProjectRepository.findCioRatingByProjectId(projectId);
     }
 }
