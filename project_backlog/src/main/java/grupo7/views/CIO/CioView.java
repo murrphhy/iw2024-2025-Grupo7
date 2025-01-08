@@ -23,7 +23,9 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
 
 import grupo7.models.Project;
+import grupo7.models.keys.TechnicianProjectId;
 import grupo7.models.TechnicianProject;
+import grupo7.security.AuthenticatedUser;
 import grupo7.services.TechnicianProjectService;
 import grupo7.repositories.TechnicianProjectRepository;
 import grupo7.models.AppUser;
@@ -34,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -50,8 +53,10 @@ import java.util.stream.Collectors;
 @Menu(order = 3)
 public class CioView extends VerticalLayout {
 
-    private final TechnicianProjectService technicianProjectService;
-    private final TechnicianProject technicianProject;
+    private  AuthenticatedUser authenticatedUser ;
+    private  TechnicianProjectId technicianProjectId;
+    private  TechnicianProjectService technicianProjectService;
+    private  TechnicianProject technicianProject;
     private final ProjectService projectService;
     private final EmailService emailService;
     private final Grid<Project> projectGrid = new Grid<>(Project.class);
@@ -69,9 +74,11 @@ public class CioView extends VerticalLayout {
      * @param emailService   the service to handle email notifications
      */
     @Autowired
-    public CioView(ProjectService projectService, EmailService emailService) {
+    public CioView(ProjectService projectService, EmailService emailService, AuthenticatedUser authenticatedUser, TechnicianProjectService technicianProjectService, TechnicianProjectRepository projectRepository) {
         this.projectService = projectService;
         this.emailService = emailService;
+        this.authenticatedUser = authenticatedUser;
+        this.technicianProjectService = technicianProjectService;
 
         binder.forField(strategicAlignmentField)
                 .bind(Project::getStrategicAlignment, Project::setStrategicAlignment);
@@ -165,7 +172,6 @@ private void showProjectDetailsDialog(Project project) {
     dialog.setWidth("80%");
     dialog.setHeight("80%");
 
-    // Detalles del proyecto
     VerticalLayout detailsLayout = new VerticalLayout();
     detailsLayout.add(new H4(getTranslation("projectDetails")));
     detailsLayout.add(new Paragraph(getTranslation("applicant") + ": " + 
@@ -175,22 +181,31 @@ private void showProjectDetailsDialog(Project project) {
     detailsLayout.add(new Paragraph(getTranslation("date") + ": " + 
         (project.getStartDate() != null ? project.getStartDate().toString() : getTranslation("notAvailable"))));
 
-    technicianProject=technicianProjectService.getTechnicianProjectById(project.getId());
-
-    if (technicianProject != null) {
-        detailsLayout.add(new Paragraph(getTranslation("financialResources") + ": " + 
-            (technicianProject.getFinancialResources() != null ? technicianProject.getFinancialResources().toString() : getTranslation("notAvailable"))));
-        detailsLayout.add(new Paragraph(getTranslation("humanResources") + ": " + 
-            technicianProject.getHumanResources()));
-        detailsLayout.add(new Paragraph(getTranslation("projectAppraisal") + ": " + 
-            (technicianProject.getProjectAppraisal() != null ? technicianProject.getProjectAppraisal().toString() : getTranslation("notAvailable"))));
-        detailsLayout.add(new Paragraph(getTranslation("technicalResources") + ": " + 
-            (technicianProject.getTechnicalResources() != null ? technicianProject.getTechnicalResources() : getTranslation("notAvailable"))));
-    } else {
-        detailsLayout.add(new Paragraph(getTranslation("noTechnicianProjectDetails")));
+    Optional<AppUser> maybeUser = authenticatedUser.get();
+    if (maybeUser.isEmpty()) {
+        Notification.show(getTranslation("no.logged.in"));
+        return;
     }
 
-    // Botones de acción
+    technicianProjectId = new TechnicianProjectId(project.getApplicantId().getId(), project.getId());
+    Optional<TechnicianProject> maybeProject = technicianProjectService.getTechnicianProjectById(technicianProjectId);
+
+    if (maybeProject.isEmpty()) {
+        Notification.show(getTranslation("noTechnicianProjectDetails"));
+        return;
+    }
+    technicianProject = maybeProject.get();
+
+    detailsLayout.add(new Paragraph(getTranslation("financialResources") + ": " +
+        (technicianProject.getFinancialResources() != null ? technicianProject.getFinancialResources().toString() : getTranslation("notAvailable"))));
+    detailsLayout.add(new Paragraph(getTranslation("humanResources") + ": " +
+        technicianProject.getHumanResources()));
+    detailsLayout.add(new Paragraph(getTranslation("projectAppraisal") + ": " +
+        (technicianProject.getProjectAppraisal() != null ? technicianProject.getProjectAppraisal().toString() : getTranslation("notAvailable"))));
+    detailsLayout.add(new Paragraph(getTranslation("technicalResources") + ": " +
+        (technicianProject.getTechnicalResources() != null ? technicianProject.getTechnicalResources() : getTranslation("notAvailable"))));
+
+
     Button acceptButton = new Button(getTranslation("accept"), event -> {
         acceptProject(project);
         dialog.close();
@@ -203,10 +218,8 @@ private void showProjectDetailsDialog(Project project) {
     });
     rejectButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
-    // Layout de botones
     HorizontalLayout buttonLayout = new HorizontalLayout(acceptButton, rejectButton);
 
-    // Configurar el diálogo
     dialog.add(detailsLayout, buttonLayout);
     dialog.open();
 }
@@ -217,9 +230,8 @@ private void showProjectDetailsDialog(Project project) {
  * @param project the project to accept
 */
 private void acceptProject(Project project) {
-    // Lógica para aceptar el proyecto
     project.setState("Aceptado");
-    projectService.saveProject(project); // Guarda los cambios si usas un servicio
+    projectService.saveProject(project);
     Notification.show(getTranslation("projectAccepted") + ": " + project.getShortTitle());
 }
 
