@@ -1,27 +1,53 @@
 package grupo7.services;
 
-import grupo7.models.Promoter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PromoterApiResponse {
-    private String status;
-    private List<Promoter> data;
+    private List<PromoterData> data;
 
-    // Getters y Setters
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public List<Promoter> getData() {
+    public List<PromoterData> getData() {
         return data;
     }
 
-    public void setData(List<Promoter> data) {
+    public void setData(List<PromoterData> data) {
         this.data = data;
+    }
+
+    public static class PromoterData {
+        @JsonIgnore
+        private Long id;
+
+        private String cargo;
+        private String nombre;
+
+        // Getters y Setters
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getCargo() {
+            return cargo;
+        }
+
+        public void setCargo(String cargo) {
+            this.cargo = cargo;
+        }
+
+        public String getNombre() {
+            return nombre;
+        }
+
+        public void setNombre(String nombre) {
+            this.nombre = nombre;
+        }
     }
 }

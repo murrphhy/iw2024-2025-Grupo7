@@ -1,5 +1,6 @@
 package grupo7.repositories;
 
+import com.vaadin.open.App;
 import grupo7.models.AppUser;
 import grupo7.models.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,7 +14,9 @@ public interface UserRepository extends JpaRepository<AppUser, Long> {
 
     List<AppUser> findAll();
 
-    Optional<AppUser> findByEmail(String email);
+    List<AppUser> findAllByRole(Role role);
+
+    Optional<AppUser> findByEmail(String role);
 
     Optional<AppUser> findByUsername(String username);
 

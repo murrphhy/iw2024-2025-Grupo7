@@ -35,7 +35,6 @@ public class AppUser {
     /**
      * Center or institution to which the user belongs. Cannot be null.
      */
-    @Column(nullable = false)
     private String center;
 
     /**
@@ -53,7 +52,6 @@ public class AppUser {
     /**
      * Technical area of expertise for the user. Cannot be null.
      */
-    @Column(nullable = false)
     private String technical_area;
 
     /**

@@ -119,6 +119,7 @@ public class ProjectController {
             projectService.deleteProject(projectId);
             return ResponseEntity.noContent().build();
         } else {
+
             return ResponseEntity.notFound().build();
         }
     }
