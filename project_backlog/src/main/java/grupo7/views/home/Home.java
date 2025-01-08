@@ -2,6 +2,7 @@ package grupo7.views.home;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -13,6 +14,7 @@ import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -30,7 +32,6 @@ import grupo7.security.AuthenticatedUser;
 import grupo7.services.ProjectService;
 import grupo7.services.PromoterApiResponse;
 import grupo7.services.UserService;
-import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayInputStream;
@@ -104,6 +105,24 @@ public class Home extends VerticalLayout {
             return d != null ? d.toString() : "N/A";
         }).setHeader("Fecha").setTextAlign(ColumnTextAlign.END); // Right alignment
 
+        Optional<AppUser> maybeUser = authenticatedUser.get();
+        if (maybeUser.isPresent()) {
+            AppUser currentUser = maybeUser.get();
+            if (currentUser.getRole() == Role.PROMOTER) {
+                projectGrid.addComponentColumn(project -> {
+                    if (project.getPromoterId() == null) {
+                        Button assignButton = new Button("Avalar", e -> assignPromoter(project));
+                        assignButton.setIcon(VaadinIcon.USER_CHECK.create());
+                        assignButton.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
+                        return assignButton;
+                    } else {
+                        return new Button();
+                    }
+                }).setHeader("Acciones").setWidth("180px").setFlexGrow(0);
+            }
+        }
+
+
         projectGrid.setItems(projectService.getAllProjects());
         projectGrid.setWidth("90%");
         projectGrid.setHeight("400px");
@@ -111,6 +130,33 @@ public class Home extends VerticalLayout {
         // Add selection listener to open project details dialog
         projectGrid.addSelectionListener(event -> event.getFirstSelectedItem().ifPresent(this::openProjectDetailsDialog));
     }
+
+    /**
+     * Metodo para asignar el promoterId al proyecto.
+     * Asigna el promoterId del usuario actual al proyecto y actualiza la cuadrícula.
+     *
+     * @param project El proyecto al que se asignará el promoterId.
+     */
+    private void assignPromoter(Project project) {
+        Optional<AppUser> maybeUser = authenticatedUser.get();
+        if (maybeUser.isPresent()) {
+            AppUser currentUser = maybeUser.get();
+            if (currentUser.getRole() == Role.PROMOTER) {
+                // Asignar el promoterId al username del promotor actual
+                project.setPromoterId(currentUser.getUsername()); // Asegúrate de que promoterId es de tipo String
+                projectService.saveProject(project); // Guardar los cambios
+                Notification.show("Has asignado tu ID como promotor al proyecto.", 3000, Notification.Position.BOTTOM_START);
+                projectGrid.getDataProvider().refreshItem(project); // Actualizar solo el ítem modificado
+            } else {
+                Notification.show("No tienes permisos para avalar proyectos.", 3000, Notification.Position.MIDDLE)
+                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        } else {
+            Notification.show("No hay ningún usuario logueado.", 3000, Notification.Position.MIDDLE)
+                    .addThemeVariants(NotificationVariant.LUMO_ERROR);
+        }
+    }
+
 
     private void openProjectDetailsDialog(Project project) {
         Dialog dialog = new Dialog();
