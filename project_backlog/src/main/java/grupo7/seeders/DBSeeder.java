@@ -61,18 +61,6 @@ public class DBSeeder {
                 cio.setRole(Role.valueOf("CIO"));
                 userRepository.save(cio);
             }
-
-            if (userRepository.findByUsername("promoterUser").isEmpty()) {
-                AppUser promoter = new AppUser();
-                promoter.setUsername("promoterUser");
-                promoter.setPassword(passwordEncoder.encode("password"));
-                promoter.setEmail("promoter@uca.es");
-                promoter.setAcademicPosition("Promotor de Proyectos");
-                promoter.setCenter("Centro de Promoción");
-                promoter.setTechnicalArea("Desarrollo de Proyectos");
-                promoter.setRole(Role.valueOf("PROMOTER"));
-                userRepository.save(promoter);
-            }
         };
     }
 }
