@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import grupo7.models.Project;
 
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,11 +46,11 @@ public class TechnicianProjectService {
         }
     }
 
-    public void saveTechnicalRating(Long userId, Long projectId, Double rating) {
+    public void saveTechnicalRating(Long userId, Long projectId, Double rating, int humanResources, BigDecimal financialResources, String technicalResources) {
         // Guardar la nota en TechnicianProject
         TechnicianProjectId id = new TechnicianProjectId(userId, projectId);
         TechnicianProject technicianProject = technicianProjectRepository.findById(id)
-                .orElse(new TechnicianProject(userId, projectId, rating));
+                .orElse(new TechnicianProject(userId, projectId, rating,humanResources, financialResources, technicalResources));
         technicianProject.setProjectAppraisal(rating);
         technicianProjectRepository.save(technicianProject);
 
