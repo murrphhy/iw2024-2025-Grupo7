@@ -21,7 +21,7 @@ public class SupportController {
     private SupportService supportService;
 
     // Crear o actualizar una relación Support
-    @PostMapping
+    @PostMapping("/create/{userId}/{projectId}")
     public ResponseEntity<Support> createOrUpdateSupport(@RequestBody Support support) {
         Support savedSupport = supportService.saveSupport(support);
         return ResponseEntity.ok(savedSupport);
@@ -35,7 +35,7 @@ public class SupportController {
     }
 
     // Obtener una relación Support por ID combinado
-    @GetMapping("/{userId}/{projectId}")
+    @GetMapping("/read/{userId}/{projectId}")
     public ResponseEntity<Support> getSupportById(
             @PathVariable Long userId,
             @PathVariable Long projectId) {
@@ -46,7 +46,7 @@ public class SupportController {
     }
 
     // Eliminar una relación Support por ID combinado
-    @DeleteMapping("/{userId}/{projectId}")
+    @DeleteMapping("/delete/{userId}/{projectId}")
     public ResponseEntity<Void> deleteSupport(
             @PathVariable Long userId,
             @PathVariable Long projectId) {

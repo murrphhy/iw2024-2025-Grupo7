@@ -21,8 +21,8 @@ public class AuthenticatedUser {
 
     @Transactional
     public Optional<AppUser> get() {
-        return authenticationContext.getAuthenticatedUser(AppUser.class)
-                .map(userDetails -> userRepository.findByUsername(userDetails.getUsername()).get());
+        return authenticationContext.getAuthenticatedUser(org.springframework.security.core.userdetails.User.class)
+                .flatMap(springUser -> userRepository.findByUsername(springUser.getUsername()));
     }
 
     public void logout() {

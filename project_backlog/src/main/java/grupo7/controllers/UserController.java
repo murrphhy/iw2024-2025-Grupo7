@@ -22,7 +22,7 @@ public class UserController {
     private UserService userService;
 
     // Crear un nuevo usuario
-    @PostMapping
+    @PostMapping("/create/{id}")
     @ResponseStatus(HttpStatus.CREATED)
     public AppUser createUser(@RequestBody AppUser usuario) {
         return userService.saveUser(usuario);
@@ -36,14 +36,14 @@ public class UserController {
     }
 
     // Leer un usuario por ID
-    @GetMapping("/{id}")
+    @GetMapping("/read/{id}")
     public ResponseEntity<AppUser> getUserById(@PathVariable Long id) {
         Optional<AppUser> user = userService.getUserById(id);
         return user.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     // Actualizar un usuario por ID
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")
     public ResponseEntity<AppUser> updateUser(@PathVariable Long id, @RequestBody AppUser userDetails) {
         Optional<AppUser> userOptional = userService.getUserById(id);
 
@@ -53,16 +53,16 @@ public class UserController {
             user.setAcademicPosition(userDetails.getAcademicPosition());
             user.setCenter(userDetails.getCenter());
             user.setEmail(userDetails.getEmail());
-            user.setisAdmin(userDetails.getisAdmin());
+            user.setRole(userDetails.getRole());
             user.setPassword(userDetails.getPassword());
-            user.setTechnical_area(userDetails.getTechnicalArea());
+            user.setTechnicalArea(userDetails.getTechnicalArea());
             return ResponseEntity.ok(userService.saveUser(user));
         } else {
             return ResponseEntity.notFound().build();
         }
     }
 
-    // Borrar un usario por ID
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         if (userService.getUserById(id).isPresent()) {

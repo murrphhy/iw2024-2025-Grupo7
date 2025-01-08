@@ -24,9 +24,6 @@ services:
     restart: always
     environment:
       PMA_HOST: database
-      PMA_USER: iw
-      PMA_PASSWORD: iw
-      MYSQL_ROOT_PASSWORD: password
     depends_on:
       - database
     networks:

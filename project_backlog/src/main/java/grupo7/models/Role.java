@@ -1,5 +1,5 @@
 package grupo7.models;
 
 public enum Role {
-    USER, ADMIN;
+    APPLICANT, TECHNICAL, CIO, ADMINISTRATOR, PROMOTER;
 }

@@ -24,7 +24,7 @@ public class TechnicianProjectController {
     }
 
     // Obtener un TechnicianProject por ID
-    @GetMapping("/{userId}/{projectId}")
+    @GetMapping("/read/{userId}/{projectId}")
     public ResponseEntity<TechnicianProject> getTechnicianProjectById(
             @PathVariable Long userId,
             @PathVariable Long projectId) {
@@ -35,14 +35,14 @@ public class TechnicianProjectController {
     }
 
     // Crear o actualizar un TechnicianProject
-    @PostMapping
+    @PostMapping("/create/{userId}/{projectId}")
     public ResponseEntity<TechnicianProject> createOrUpdateTechnicianProject(@RequestBody TechnicianProject technicianProject) {
         TechnicianProject savedTechnicianProject = technicianProjectService.saveTechnicianProject(technicianProject);
         return ResponseEntity.ok(savedTechnicianProject);
     }
     
     // Eliminar un TechnicianProject por ID
-    @DeleteMapping("/{userId}/{projectId}")
+    @DeleteMapping("/delete/{userId}/{projectId}")
     public ResponseEntity<Void> deleteTechnicianProject(
             @PathVariable Long userId, 
             @PathVariable Long projectId) {
