@@ -21,6 +21,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.ByteArrayInputStream;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 /**
@@ -57,6 +59,8 @@ public class TechnicalAreaView extends VerticalLayout {
 
         // Cargar datos en la tabla
         loadProjects();
+
+        refreshGrid();
     }
 
     private VerticalLayout createDownloadField(String label, byte[] fileContent, String fileName) {
@@ -204,6 +208,7 @@ public class TechnicalAreaView extends VerticalLayout {
                 Notification.show("Puntuación guardada: " + rating);
                 dialog.close();
                 loadProjects(); // Recargar proyectos
+                refreshGrid();
             } else {
                 Notification.show("Por favor, ingresa una puntuación válida.");
             }
@@ -221,6 +226,17 @@ public class TechnicalAreaView extends VerticalLayout {
         dialog.add(dialogLayout);
         dialog.open();
     }
+
+    /**
+     * Refreshes the project grid by fetching and displaying only the projects with the state "alineado".
+     */
+    private void refreshGrid() {
+        List<Project> alignedProjects = projectService.getAllProjects().stream()
+                .filter(project -> "alineado".equalsIgnoreCase(project.getState()))
+                .collect(Collectors.toList());
+        projectGrid.setItems(alignedProjects);
+    }
+
 
 
     /**
