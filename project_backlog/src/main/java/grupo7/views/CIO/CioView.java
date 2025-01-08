@@ -22,61 +22,63 @@ import grupo7.services.ProjectService;
 import grupo7.services.EmailService;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
 
-@PageTitle("Cio View")
+@PageTitle("cio.view.title")
 @Route("cio-dashboard")
 @RolesAllowed("CIO")
 @Menu(order = 3)
 public class CioView extends VerticalLayout {
 
     private final ProjectService projectService;
-    private final EmailService emailService;
     private final Grid<Project> projectGrid = new Grid<>(Project.class);
     private final Binder<Project> binder = new Binder<>(Project.class);
 
-    private final NumberField strategicAlignmentField = new NumberField("Alineamiento Estratégico");
-    private final Button saveButton = new Button("Guardar");
+    private final NumberField strategicAlignmentField = new NumberField();
+    private final Button saveButton = new Button();
 
     @Autowired
     public CioView(ProjectService projectService, EmailService emailService, I18NProvider i18nProvider) {
         this.projectService = projectService;
-        this.emailService = emailService;
 
         binder.forField(strategicAlignmentField)
-          .bind(Project::getStrategicAlignment, Project::setStrategicAlignment);
+                .bind(Project::getStrategicAlignment, Project::setStrategicAlignment);
 
-        // Configurar layout
+        // Localization
+        strategicAlignmentField.setLabel(getTranslation("cio.view.field.alignment"));
+        saveButton.setText(getTranslation("cio.view.button.save"));
+
+        // Layout setup
         setSizeFull();
         add(createProjectGrid(), createPrioritizationForm());
         refreshGrid();
     }
 
     private Grid<Project> createProjectGrid() {
-
         projectGrid.removeAllColumns();
 
-        projectGrid.addColumn(project -> project.getApplicantId() != null ? project.getApplicantId().getUsername() : "N/A")
-               .setHeader("Solicitante")
-               .setSortable(true);
+        projectGrid.addColumn(project -> project.getApplicantId() != null ? project.getApplicantId().getUsername() : getTranslation("cio.view.grid.notAvailable"))
+                .setHeader(getTranslation("cio.view.grid.applicant"))
+                .setSortable(true);
 
         projectGrid.addColumn(Project::getShortTitle)
-               .setHeader("Título corto")
-               .setSortable(true);
+                .setHeader(getTranslation("cio.view.grid.shortTitle"))
+                .setSortable(true);
 
         projectGrid.addColumn(Project::getState)
-               .setHeader("Estado")
-               .setSortable(true);
+                .setHeader(getTranslation("cio.view.grid.state"))
+                .setSortable(true);
 
-        projectGrid.addColumn(project -> project.getStartDate() != null ? project.getStartDate().toString() : "N/A")
-               .setHeader("Fecha")
-               .setSortable(true);
-        
+        projectGrid.addColumn(project -> project.getStartDate() != null ? project.getStartDate().toString() : getTranslation("cio.view.grid.notAvailable"))
+                .setHeader(getTranslation("cio.view.grid.date"))
+                .setSortable(true);
+
         projectGrid.asSingleSelect().addValueChangeListener(event -> editProject(event.getValue()));
         projectGrid.addItemDoubleClickListener(event -> openProjectDetailsDialog(event.getItem()));
-        
+
         return projectGrid;
     }
 
@@ -105,29 +107,28 @@ public class CioView extends VerticalLayout {
 
     private void openProjectDetailsDialog(Project project) {
         Dialog dialog = new Dialog();
-        dialog.setHeaderTitle("Detalles Proyecto");
+        dialog.setHeaderTitle(getTranslation("cio.view.dialog.details.title"));
 
         dialog.setWidth("60%");
 
         VerticalLayout detailsLayout = new VerticalLayout();
         detailsLayout.getStyle().set("text-align", "center");
 
-        // Título principal
+        // Title
         H2 title = new H2(project.getTitle());
         title.getStyle().set("margin-bottom", "10px");
         detailsLayout.add(title);
 
-        // Detalles estilizados
-        detailsLayout.add(createDetailField("Título", project.getTitle()));
-        detailsLayout.add(createDetailField("Promotor", project.getPromoterId()));
-        detailsLayout.add(createDetailField("Solicitante",
-                project.getApplicantId() != null ? project.getApplicantId().getUsername() : "N/A"));
-        detailsLayout.add(createDetailField("Regulaciones", project.getProjectRegulations()));
-        detailsLayout.add(createDetailField("Objetivo", project.getScope()));
-        detailsLayout.add(createDetailField("Estado", project.getState()));
-        detailsLayout.add(createDetailField("Fecha inicio", project.getStartDate() != null ? project.getStartDate().toString() : "N/A"));
+        // Details
+        detailsLayout.add(createDetailField(getTranslation("cio.view.dialog.details.field.title"), project.getTitle()));
+        detailsLayout.add(createDetailField(getTranslation("cio.view.dialog.details.field.promoter"), project.getPromoterId()));
+        detailsLayout.add(createDetailField(getTranslation("cio.view.dialog.details.field.applicant"),
+                project.getApplicantId() != null ? project.getApplicantId().getUsername() : getTranslation("cio.view.grid.notAvailable")));
+        detailsLayout.add(createDetailField(getTranslation("cio.view.dialog.details.field.objective"), project.getScope()));
+        detailsLayout.add(createDetailField(getTranslation("cio.view.dialog.details.field.state"), project.getState()));
+        detailsLayout.add(createDetailField(getTranslation("cio.view.dialog.details.field.startDate"), project.getStartDate() != null ? project.getStartDate().toString() : getTranslation("cio.view.grid.notAvailable")));
 
-        // Descargar archivo de memoria si existe
+        // File download
         if (project.getMemory() != null) {
             StreamResource resource = new StreamResource(
                     "memory.pdf",
@@ -135,19 +136,19 @@ public class CioView extends VerticalLayout {
             );
             resource.setContentType("application/pdf");
 
-            Button downloadButton = new Button("Descargar Memoria", e -> {
+            Button downloadButton = new Button(getTranslation("cio.view.dialog.details.button.download"), e -> {
                 Anchor downloadLink = new Anchor(resource, "");
-                downloadLink.getElement().setAttribute("Descargar", true);
+                downloadLink.getElement().setAttribute("download", true);
                 downloadLink.getStyle().set("display", "none");
                 detailsLayout.getElement().appendChild(downloadLink.getElement());
                 downloadLink.getElement().callJsFunction("click");
             });
             detailsLayout.add(downloadButton);
         } else {
-            detailsLayout.add(createDetailField("Memoria", "No memory file uploaded."));
+            detailsLayout.add(createDetailField(getTranslation("cio.view.dialog.details.field.memory"), getTranslation("cio.view.dialog.details.noMemory")));
         }
 
-        Button closeButton = new Button("Cerrar", event -> dialog.close());
+        Button closeButton = new Button(getTranslation("cio.view.dialog.details.button.close"), event -> dialog.close());
         HorizontalLayout footer = new HorizontalLayout(closeButton);
         footer.setWidthFull();
         footer.setJustifyContentMode(JustifyContentMode.END);
@@ -156,7 +157,6 @@ public class CioView extends VerticalLayout {
         dialog.open();
     }
 
-    // Metodo para crear un campo estilizado
     private VerticalLayout createDetailField(String label, String value) {
         VerticalLayout fieldLayout = new VerticalLayout();
         fieldLayout.setSpacing(false);
@@ -181,34 +181,7 @@ public class CioView extends VerticalLayout {
     private void savePrioritization() {
         Project project = binder.getBean();
         if (project != null) {
-
-            if (project.getStrategicAlignment() != null) {
-
-                project.setState("Puntuado");
-
-                AppUser applicant = project.getApplicantId();
-
-                if (applicant != null) {
-
-                    String email = applicant.getEmail();
-                    String subject = "Su proyecto ha sido puntuado";
-                    String message = String.format(
-                            "Estimado/a %s,\n\nSu proyecto titulado '%s' ha sido puntuado con el siguiente valor:\n" +
-                                    "- Alineamiento Estratégico: %.1f\n\nGracias por su participación.",
-                            applicant.getUsername(),
-                            project.getTitle(),
-                            strategicAlignmentField.getValue()
-                    );
-    
-                    emailService.sendEmail(email, subject, message);
-                }
-
-            }else{
-                project.setState("En espera");
-            }
-
             projectService.saveProject(project);
-
             refreshGrid();
             clearForm();
         }
