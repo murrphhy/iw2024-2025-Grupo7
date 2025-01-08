@@ -82,7 +82,7 @@ public class TechnicalAreaView extends VerticalLayout {
         );
         resource.setContentType("application/pdf"); // Adjust the type according to the file
 
-        Anchor downloadLink = new Anchor(resource, getTranslation("button.download")+ " " + label);
+        Anchor downloadLink = new Anchor(resource, getTranslation("button.download.Memory"));
         downloadLink.getElement().setAttribute("download", true);
         downloadLink.getStyle().set("margin-top", "5px");
         downloadLink.getStyle().set("display", "inline-block");
@@ -121,7 +121,7 @@ public class TechnicalAreaView extends VerticalLayout {
      */
     private void configureGrid() {
         projectGrid.addColumn(Project::getTitle).setHeader(getTranslation("evaluate.title")).setSortable(true);
-        projectGrid.addColumn(Project::getStrategicAlignment).setHeader(getTranslation("state"));
+        projectGrid.addColumn(Project::getStrategicAlignment).setHeader(getTranslation("note"));
         projectGrid.addColumn(Project::getState).setHeader(getTranslation("state")).setSortable(true);
 
         projectGrid.addComponentColumn(project -> {
