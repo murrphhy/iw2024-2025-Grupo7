@@ -21,6 +21,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.ByteArrayInputStream;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -175,7 +176,7 @@ public class TechnicalAreaView extends VerticalLayout {
         // Download Memory file if exists
         projectInfoLayout.add(createDownloadField("Memoria", project.getMemory(), project.getShortTitle() + "_memory.pdf"));
 
-        // Add buttons for Project Regulations and Technical Specifications
+        // Añadir botones para descargar archivos relacionados
         if (project.getProjectRegulations() != null && project.getProjectRegulations().length > 0) {
             projectInfoLayout.add(createDownloadField("Regulaciones del Proyecto", project.getProjectRegulations(), project.getShortTitle() + "_project_regulations.pdf"));
         } else {
@@ -200,17 +201,43 @@ public class TechnicalAreaView extends VerticalLayout {
         ratingField.setMax(10);
         controlsLayout.add(ratingField);
 
+        // Campo para recursos humanos
+        NumberField humanResourcesField = new NumberField("Recursos Humanos");
+        humanResourcesField.setMin(0);
+        controlsLayout.add(humanResourcesField);
+
+        // Campo para recursos financieros
+        NumberField financialResourcesField = new NumberField("Recursos Financieros");
+        financialResourcesField.setMin(0);
+        controlsLayout.add(financialResourcesField);
+
+        // Campo para recursos técnicos
+        com.vaadin.flow.component.textfield.TextField technicalResourcesField = new com.vaadin.flow.component.textfield.TextField("Recursos Técnicos");
+        controlsLayout.add(technicalResourcesField);
+
         // Botones
         Button saveButton = new Button("Guardar", event -> {
-            if (ratingField.getValue() != null) {
+            if (ratingField.getValue() != null && humanResourcesField.getValue() != null && financialResourcesField.getValue() != null && !technicalResourcesField.isEmpty()) {
                 Double rating = ratingField.getValue();
-                technicianProjectService.saveTechnicalRating(project.getApplicantId().getId(),project.getId(),rating);
-                Notification.show("Puntuación guardada: " + rating);
+                int humanResources = humanResourcesField.getValue().intValue();
+                BigDecimal financialResources = BigDecimal.valueOf(financialResourcesField.getValue());
+                String technicalResources = technicalResourcesField.getValue();
+
+                technicianProjectService.saveTechnicalRating(
+                        project.getApplicantId().getId(),
+                        project.getId(),
+                        rating,
+                        humanResources,
+                        financialResources,
+                        technicalResources
+                );
+
+                Notification.show("Evaluación guardada: Puntuación " + rating + ", Recursos Humanos " + humanResources + ", Recursos Financieros " + financialResources + ", Recursos Técnicos " + technicalResources);
                 dialog.close();
                 loadProjects(); // Recargar proyectos
                 refreshGrid();
             } else {
-                Notification.show("Por favor, ingresa una puntuación válida.");
+                Notification.show("Por favor, completa todos los campos.");
             }
         });
 
@@ -226,6 +253,7 @@ public class TechnicalAreaView extends VerticalLayout {
         dialog.add(dialogLayout);
         dialog.open();
     }
+
 
     /**
      * Refreshes the project grid by fetching and displaying only the projects with the state "alineado".
