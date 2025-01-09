@@ -58,6 +58,7 @@ public class MyProjectsView extends VerticalLayout {
         projectGrid.addColumn(Project::getStartDate).setHeader(getTranslation("startDate"));
         projectGrid.addColumn(project -> project.getApplicantId() != null ? project.getApplicantId().getUsername() : getTranslation("notAvailable"))
                 .setHeader(getTranslation("applicant"));
+
     }
 
     /**
@@ -69,7 +70,9 @@ public class MyProjectsView extends VerticalLayout {
             projectGrid.setItems(userProjects);
         }, () -> {
             projectGrid.setItems(); // Clear the grid
+
             add(new Span(getTranslation("auth.noProjectsAssociated")));
         });
     }
 }
+

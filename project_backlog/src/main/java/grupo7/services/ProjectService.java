@@ -268,7 +268,6 @@ public class ProjectService {
         projectRepository.deleteById(projectId);
     }
 
-
     /**
      * Retrieves projects associated with a specific user ID.
      *
