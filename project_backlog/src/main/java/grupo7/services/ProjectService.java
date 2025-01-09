@@ -61,6 +61,10 @@ public class ProjectService {
         return projectRepository.findByTitle(title);
     }
 
+    public boolean determineIfAccepted(Project project) {
+        return "aceptado".equalsIgnoreCase(project.getState());
+    }
+
     /**
      * Saves a project to the database.
      * If the project's state changes, it notifies relevant users via email.
@@ -75,20 +79,25 @@ public class ProjectService {
                     .ifPresent(existing -> oldStateRef.set(existing.getState()));
         }
         String oldState = oldStateRef.get();
-
-        String newState = getNextState(oldState);
+    
+        // Asumiendo que 'accepted' es un valor conocido en este contexto
+        boolean accepted = determineIfAccepted(project); // Lógica para determinar si el proyecto fue aceptado o rechazado
+    
+        // Llamar a getNextState pasando el estado antiguo y el valor de aceptado
+        String newState = getNextState(oldState, accepted);
         project.setState(newState);
-
-        // Save the project
+    
+        // Guardar el proyecto
         Project savedProject = projectRepository.save(project);
-
-        // If there's a real state change, handle transitions (send emails, etc.)
+    
+        // Si hay un cambio real en el estado, manejar la transición
         if (newState != null && !newState.equals(oldState)) {
             handleStateTransition(oldState, newState, savedProject);
         }
-
+    
         return savedProject;
     }
+    
 
     /**
      * Handles project state transitions and sends email notifications as appropriate.
@@ -225,21 +234,30 @@ public class ProjectService {
      * @param oldState the previous state (may be null or empty if new)
      * @return the new state to assign
      */
-    private String getNextState(String oldState) {
+    public String getNextState(String oldState, boolean accepted) {
         if (oldState == null || oldState.isEmpty()) {
-            return "presentado";
+            return "presentado";  // El primer estado es "presentado"
         }
         switch (oldState) {
             case "presentado":
-                return "alineado";
+                return "alineado";  // De "presentado" a "alineado"
             case "alineado":
-                return "evaluado";
+                return "evaluado";  // De "alineado" a "evaluado"
+            case "evaluado":
+                // Aquí es donde decides si el proyecto es "aceptado" o "no aceptado"
+                // El estado cambiaría en función de la acción tomada
+                // Si el proyecto es rechazado, cambiar a "No Aceptado"
+                return accepted ? "aceptado" : "no aceptado";  // Este estado no se modifica por sí solo, se actualiza con una acción de aceptación o rechazo
+            case "aceptado":
+                return oldState;  // Si ya está "aceptado", no cambia
+            case "no aceptado":
+                return oldState;  // Si ya está "no aceptado", no cambia
             default:
-                // If it's already "evaluado" (or any other state like "aceptado"/"rechazado"),
-                // we leave it as is.
-                return oldState;
+                return oldState;  // Otros estados no cambiantes
         }
     }
+    
+    
 
     /**
      * Deletes a project by its ID.
@@ -251,7 +269,17 @@ public class ProjectService {
     }
 
 
-
+    /**
+     * Retrieves projects associated with a specific user ID.
+     *
+     * @param userId the ID of the user.
+     * @return a list of projects associated with the user.
+     */
+    public List<Project> getProjectsByUserId(Long userId) {
+        return projectRepository.findAll().stream()
+                .filter(project -> project.getApplicantId() != null && project.getApplicantId().getId().equals(userId))
+                .toList();
+    }
 
 
 }
