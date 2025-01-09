@@ -8,17 +8,13 @@ public class TechnicianProjectId implements Serializable {
     private Long user_id;
     private Long project_id;
 
-    // Constructor vacío
     public TechnicianProjectId() {
     }
     
-    // Constructor completo
     public TechnicianProjectId(Long user_id, Long project_id) {
         this.user_id = user_id;
         this.project_id = project_id;
     }
-
-    // Getters and Setters
 
     public Long getUserId() {
         return user_id;

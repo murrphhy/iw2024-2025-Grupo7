@@ -53,11 +53,12 @@ public class MyProjectsView extends VerticalLayout {
      * Configures the grid to display project details.
      */
     private void configureGrid() {
-        projectGrid.addColumn(Project::getTitle).setHeader("Título").setSortable(true);
-        projectGrid.addColumn(Project::getState).setHeader("Estado").setSortable(true);
-        projectGrid.addColumn(Project::getStartDate).setHeader("Fecha de Inicio");
-        projectGrid.addColumn(project -> project.getApplicantId() != null ? project.getApplicantId().getUsername() : "N/A")
-                .setHeader("Solicitante");
+        projectGrid.addColumn(Project::getTitle).setHeader(getTranslation("title")).setSortable(true);
+        projectGrid.addColumn(Project::getState).setHeader(getTranslation("state")).setSortable(true);
+        projectGrid.addColumn(Project::getStartDate).setHeader(getTranslation("startDate"));
+        projectGrid.addColumn(project -> project.getApplicantId() != null ? project.getApplicantId().getUsername() : getTranslation("notAvailable"))
+                .setHeader(getTranslation("applicant"));
+
     }
 
     /**
@@ -69,7 +70,9 @@ public class MyProjectsView extends VerticalLayout {
             projectGrid.setItems(userProjects);
         }, () -> {
             projectGrid.setItems(); // Clear the grid
-            add(new Span("No estás autenticado o no tienes proyectos asociados."));
+
+            add(new Span(getTranslation("auth.noProjectsAssociated")));
         });
     }
 }
+

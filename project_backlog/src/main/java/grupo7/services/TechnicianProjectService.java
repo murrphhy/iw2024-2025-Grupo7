@@ -22,17 +22,14 @@ public class TechnicianProjectService {
     @Autowired
     private ProjectService projectService;
 
-    // Obtener todos los TechnicianProject
     public List<TechnicianProject> getAllTechnicianProjects() {
         return technicianProjectRepository.findAll();
     }
 
-    // Obtener un TechnicianProject por su ID compuesto
-    public Optional <TechnicianProject> getTechnicianProjectById(TechnicianProjectId TechId) {
+    public Optional<TechnicianProject> getTechnicianProjectById(TechnicianProjectId TechId) {
         return technicianProjectRepository.findById(TechId);
     }
 
-    // Crear o actualizar un TechnicianProject
     public TechnicianProject saveTechnicianProject(TechnicianProject technicianProject) {
         return technicianProjectRepository.save(technicianProject);
     }
@@ -62,7 +59,4 @@ public class TechnicianProjectService {
         project.setState("evaluado");
         projectService.saveProject(project); // Asegúrate de que este método esté implementado en ProjectService
     }
-
-
-
 }

@@ -4,11 +4,14 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Footer;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Header;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.SvgIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
@@ -20,8 +23,15 @@ import com.vaadin.flow.spring.security.AuthenticationContext;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import grupo7.security.AuthenticatedUser;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 
+
+import com.vaadin.flow.i18n.I18NProvider;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * The main view is a top-level placeholder for other views.
@@ -33,28 +43,63 @@ public class MainLayout extends AppLayout {
     private H1 viewTitle;
     private final Button logoutButton;
 
-    public MainLayout(@Autowired AuthenticatedUser authenticationContext) {
+    public MainLayout(@Autowired AuthenticatedUser authenticationContext, I18NProvider i18nProvider) {
 
         if (authenticationContext.get().isPresent()) {
-            logoutButton = new Button("Logout", click -> authenticationContext.logout());
+            logoutButton = new Button("Cerrar Sesión", click -> authenticationContext.logout());
         } else {
-            logoutButton = new Button("Login", click -> UI.getCurrent().navigate("login"));
+            logoutButton = new Button("Iniciar Sesión", click -> UI.getCurrent().navigate("login"));
         }
 
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
-        addHeaderContent();
+        addHeaderContent(i18nProvider);
     }
 
 
-    private void addHeaderContent() {
+    private void addHeaderContent(I18NProvider i18nProvider) {
         DrawerToggle toggle = new DrawerToggle();
         toggle.setAriaLabel("Menu toggle");
 
         viewTitle = new H1();
         viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
 
-        addToNavbar(true, toggle, viewTitle);
+        ComboBox<Locale> languageSelector = createLanguageSelector(i18nProvider);
+
+         // Añadir elementos al encabezado
+        HorizontalLayout headerLayout = new HorizontalLayout(toggle, viewTitle, languageSelector);
+        headerLayout.setAlignItems(Alignment.CENTER);
+        headerLayout.setWidthFull();
+        headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
+
+        addToNavbar(headerLayout);
+    }
+
+    private ComboBox<Locale> createLanguageSelector(I18NProvider i18nProvider) {
+        ComboBox<Locale> languageSelector = new ComboBox<>();
+        languageSelector.setWidth("150px");
+
+        // Mapear etiquetas personalizadas
+        Map<Locale, String> languageLabels = new HashMap<>();
+        languageLabels.put(Locale.forLanguageTag("es"), "Español");
+        languageLabels.put(Locale.forLanguageTag("en"), "English");
+        languageLabels.put(Locale.forLanguageTag("fr"), "Français");
+
+        languageSelector.setItems(i18nProvider.getProvidedLocales());
+        languageSelector.setItemLabelGenerator(locale -> languageLabels.getOrDefault(locale, locale.getDisplayLanguage()));
+
+        // Listener para cambiar idioma y recargar página
+        languageSelector.addValueChangeListener(event -> {
+            if (event.getValue() != null && !event.getValue().equals(UI.getCurrent().getSession().getLocale())) {
+                UI.getCurrent().getSession().setLocale(event.getValue());
+                UI.getCurrent().getPage().reload(); // Recargar la página para aplicar el idioma
+            }
+        });        
+
+        // Establecer el idioma actual como seleccionado
+        languageSelector.setValue(UI.getCurrent().getSession().getLocale());
+
+        return languageSelector;
     }
 
     private void addDrawerContent() {

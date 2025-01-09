@@ -19,15 +19,15 @@ import grupo7.models.AppUser;
 import grupo7.models.Role;
 import grupo7.repositories.UserRepository;
 import grupo7.services.UserService;
-import jakarta.annotation.security.PermitAll;
-import com.vaadin.flow.component.formlayout.FormLayout;
 import jakarta.annotation.security.RolesAllowed;
+import com.vaadin.flow.component.formlayout.FormLayout;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 
-@PageTitle("Admin Panel")
+@PageTitle("Panel Administrador")
 @Route("/admin-panel")
 @Menu(order = 3)
 @RolesAllowed("ADMINISTRATOR")
@@ -37,10 +37,9 @@ public class AdminPanel extends Div {
     private final Binder<AppUser> binder = new Binder<>(AppUser.class);
     private AppUser currentUser;
 
-    private final UserService userService; // Instead of userRepository
+    private final UserService userService;
     private FormLayout formLayout;
-    private PasswordField passwordField; // Declaración como variable de instancia
-
+    private PasswordField passwordField;
 
     public AdminPanel(UserService userService) {
         this.userService = userService;
@@ -57,19 +56,19 @@ public class AdminPanel extends Div {
     }
 
     private void configureGrid() {
-        userGrid.addColumn(AppUser::getUsername).setHeader("Nombre");
-        userGrid.addColumn(AppUser::getEmail).setHeader("Correo Electrónico");
-        userGrid.addColumn(AppUser::getAcademicPosition).setHeader("Posición Académica");
-        userGrid.addColumn(AppUser::getCenter).setHeader("Centro");
-        userGrid.addColumn(AppUser::getTechnicalArea).setHeader("Área Técnica");
-        userGrid.addColumn(AppUser::getRole).setHeader("Rol");
+        userGrid.addColumn(AppUser::getUsername).setHeader(getTranslation("username"));
+        userGrid.addColumn(AppUser::getEmail).setHeader(getTranslation("email"));
+        userGrid.addColumn(AppUser::getAcademicPosition).setHeader(getTranslation("academicPosition"));
+        userGrid.addColumn(AppUser::getCenter).setHeader(getTranslation("center"));
+        userGrid.addColumn(AppUser::getTechnicalArea).setHeader(getTranslation("technicalArea"));
+        userGrid.addColumn(AppUser::getRole).setHeader(getTranslation("role"));
 
         userGrid.addComponentColumn(user -> {
-            Button editButton = new Button("Editar", e -> editUser(user));
-            Button deleteButton = new Button("Eliminar", e -> deleteUser(user));
+            Button editButton = new Button(getTranslation("action.edit"), e -> editUser(user));
+            Button deleteButton = new Button(getTranslation("action.delete"), e -> deleteUser(user));
             HorizontalLayout actions = new HorizontalLayout(editButton, deleteButton);
             return actions;
-        }).setHeader("Acciones");
+        }).setHeader(getTranslation("actions"));
 
         userGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
     }
@@ -82,27 +81,28 @@ public class AdminPanel extends Div {
         formLayout.setWidth("70%");
 
         // Configuración de campos
-        TextField usernameField = new TextField("Username");
-        TextField emailField = new TextField("Correo Electrónico");
-        passwordField = new PasswordField("Contraseña");
-        ComboBox<String> positionField = new ComboBox<>("Posición Académica");
+        TextField usernameField = new TextField(getTranslation("form.username"));
+        TextField emailField = new TextField(getTranslation("email"));
+        passwordField = new PasswordField(getTranslation("password"));
+        ComboBox<String> positionField = new ComboBox<>(getTranslation("academicPosition"));
         positionField.setItems("Decano", "Rector", "Técnico", "Vicerector", "Profesor");
-        TextField areaField = new TextField("Área Técnica");
-        TextField centerField = new TextField("Centro");
-        ComboBox<Role> roleField = new ComboBox<>("Rol");
-        roleField.setItems(Role.values()); // Enum.values() obtiene todas las constantes del enum
+        TextField areaField = new TextField(getTranslation("technicalArea"));
+        TextField centerField = new TextField(getTranslation("center"));
+        ComboBox<Role> roleField = new ComboBox<>(getTranslation("role"));
+        roleField.setItems(Role.values());
         roleField.setItemLabelGenerator(Role::name);
+
         binder.forField(usernameField)
-                .asRequired("El nombre de usuario es obligatorio")
+                .asRequired(getTranslation("usernameRequired"))
                 .bind(AppUser::getUsername, AppUser::setUsername);
 
         binder.forField(emailField)
-                .asRequired("El correo electrónico es obligatorio")
+                .asRequired(getTranslation("emailRequired"))
                 .bind(AppUser::getEmail, AppUser::setEmail);
 
         binder.forField(passwordField)
                 .withValidator(pass -> pass.length() >= 6 || pass.isEmpty(),
-                        "La contraseña debe tener al menos 6 caracteres")
+                        getTranslation("passwordLength"))
                 .bind(
                         user -> "",
                         (user, newPassword) -> {
@@ -112,26 +112,22 @@ public class AdminPanel extends Div {
                         }
                 );
 
-
         binder.forField(positionField)
-                .asRequired("La posición académica es obligatoria")
+                .asRequired(getTranslation("positionRequired"))
                 .bind(AppUser::getAcademicPosition, AppUser::setAcademicPosition);
 
         binder.forField(areaField)
                 .bind(AppUser::getTechnicalArea, AppUser::setTechnicalArea);
 
         binder.forField(centerField)
-                .asRequired("El centro es obligatorio")
+                .asRequired(getTranslation("centerRequired"))
                 .bind(AppUser::getCenter, AppUser::setCenter);
 
         binder.forField(roleField)
                 .bind(AppUser::getRole, AppUser::setRole);
 
-
-
-
-        Button saveButton = new Button("Guardar", e -> saveUser());
-        Button cancelButton = new Button("Cancelar", e -> cancelEdit());
+        Button saveButton = new Button(getTranslation("button.save"), e -> saveUser());
+        Button cancelButton = new Button(getTranslation("cancel"), e -> cancelEdit());
         HorizontalLayout buttonLayout = new HorizontalLayout(saveButton, cancelButton);
 
         formLayout.add(
@@ -154,12 +150,9 @@ public class AdminPanel extends Div {
     }
 
     private HorizontalLayout createToolbar() {
-        Button addNewUserButton = new Button("Nuevo Usuario", e -> addNewUser());
-
+        Button addNewUserButton = new Button(getTranslation("newUser"), e -> addNewUser());
         return new HorizontalLayout(addNewUserButton);
     }
-
-
 
     private void updateGrid() {
         userGrid.setItems(userService.getAllUsers());
@@ -172,7 +165,6 @@ public class AdminPanel extends Div {
         binder.readBean(currentUser);
         formLayout.setVisible(true);
     }
-
 
     private void editUser(AppUser user) {
         if (user != null) {
@@ -193,7 +185,6 @@ public class AdminPanel extends Div {
         }
     }
 
-
     private void saveUser() {
         try {
             if (currentUser != null) {
@@ -205,13 +196,10 @@ public class AdminPanel extends Div {
             }
         } catch (ValidationException e) {
             e.printStackTrace();
-            Notification.show("Por favor, revisa los campos del formulario");
+            Notification.show(getTranslation("validationError"));
         }
         passwordField.setVisible(true);
-
     }
-
-
 
     private void deleteUser(AppUser user) {
         userService.deleteUser(user.getId());
@@ -221,9 +209,7 @@ public class AdminPanel extends Div {
     private void cancelEdit() {
         currentUser = null;
         passwordField.setVisible(true);
-
         binder.readBean(null);
-
         formLayout.setVisible(false);
     }
 }

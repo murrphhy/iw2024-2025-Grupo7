@@ -67,7 +67,7 @@ public class Home extends VerticalLayout {
         this.projectGrid = new Grid<>(Project.class, false);
 
         if (authenticatedUser != null && authenticatedUser.get().isPresent()) {
-            Button addProjectButton = new Button("Nuevo Proyecto", e -> openNewProjectDialog());
+            Button addProjectButton = new Button(getTranslation("newProject"), e -> openNewProjectDialog());
             HorizontalLayout topBar = new HorizontalLayout(addProjectButton);
             add(topBar);
         }
@@ -91,19 +91,19 @@ public class Home extends VerticalLayout {
         projectGrid.addColumn(project ->
                 project.getApplicantId() != null
                         ? project.getApplicantId().getUsername()
-                        : "N/A"
-        ).setHeader("Solicitante");
+                        : getTranslation("promoter")
+        ).setHeader(getTranslation("notAvailable"));
 
-        projectGrid.addColumn(Project::getPromoterId).setHeader("Promotor");
+        projectGrid.addColumn(Project::getPromoterId).setHeader(getTranslation("promoter"));
 
-        projectGrid.addColumn(Project::getShortTitle).setHeader("Título Corto");
+        projectGrid.addColumn(Project::getShortTitle).setHeader(getTranslation("shortTitle"));
 
-        projectGrid.addColumn(Project::getState).setHeader("Estado");
+        projectGrid.addColumn(Project::getState).setHeader(getTranslation("state"));
 
         projectGrid.addColumn(project -> {
             Date d = project.getStartDate();
-            return d != null ? d.toString() : "N/A";
-        }).setHeader("Fecha").setTextAlign(ColumnTextAlign.END); // Right alignment
+            return d != null ? d.toString() : getTranslation("notAvailable");
+        }).setHeader(getTranslation("date")).setTextAlign(ColumnTextAlign.END); // Right alignment
 
         Optional<AppUser> maybeUser = authenticatedUser.get();
         if (maybeUser.isPresent()) {
@@ -111,14 +111,14 @@ public class Home extends VerticalLayout {
             if (currentUser.getRole() == Role.PROMOTER) {
                 projectGrid.addComponentColumn(project -> {
                     if (project.getPromoterId() == null) {
-                        Button assignButton = new Button("Avalar", e -> assignPromoter(project));
+                        Button assignButton = new Button(getTranslation("home.grid.assign"), e -> assignPromoter(project));
                         assignButton.setIcon(VaadinIcon.USER_CHECK.create());
                         assignButton.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
                         return assignButton;
                     } else {
                         return new Button();
                     }
-                }).setHeader("Acciones").setWidth("180px").setFlexGrow(0);
+                }).setHeader(getTranslation("actions")).setWidth("180px").setFlexGrow(0);
             }
         }
 
@@ -145,14 +145,14 @@ public class Home extends VerticalLayout {
                 // Asignar el promoterId al username del promotor actual
                 project.setPromoterId(currentUser.getUsername()); // Asegúrate de que promoterId es de tipo String
                 projectService.saveProject(project); // Guardar los cambios
-                Notification.show("Has asignado tu ID como promotor al proyecto.", 3000, Notification.Position.BOTTOM_START);
+                Notification.show(getTranslation("assigned"), 3000, Notification.Position.BOTTOM_START);
                 projectGrid.getDataProvider().refreshItem(project); // Actualizar solo el ítem modificado
             } else {
-                Notification.show("No tienes permisos para avalar proyectos.", 3000, Notification.Position.MIDDLE)
+                Notification.show(getTranslation("noPermission"), 3000, Notification.Position.MIDDLE)
                         .addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
         } else {
-            Notification.show("No hay ningún usuario logueado.", 3000, Notification.Position.MIDDLE)
+            Notification.show(getTranslation("no.logged.in"), 3000, Notification.Position.MIDDLE)
                     .addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
     }
@@ -160,7 +160,7 @@ public class Home extends VerticalLayout {
 
     private void openProjectDetailsDialog(Project project) {
         Dialog dialog = new Dialog();
-        dialog.setHeaderTitle("Detalles del Proyecto");
+        dialog.setHeaderTitle(getTranslation("title"));
 
         dialog.setWidth("60%");
 
@@ -173,35 +173,35 @@ public class Home extends VerticalLayout {
         detailsLayout.add(title);
 
         // Styled details
-        detailsLayout.add(createDetailField("Título Corto", project.getShortTitle()));
-        detailsLayout.add(createDetailField("Alcance", project.getScope()));
+        detailsLayout.add(createDetailField(getTranslation("shortTitle"), project.getShortTitle()));
+        detailsLayout.add(createDetailField(getTranslation("scope"), project.getScope()));
         String promoterDisplay = (project.getPromoterId() != null && !project.getPromoterId().isEmpty())
                 ? project.getPromoterId()
-                : "Sin promotor";
-        detailsLayout.add(createDetailField("Promotor", promoterDisplay));
-        detailsLayout.add(createDetailField("Solicitante",
-                project.getApplicantId() != null ? project.getApplicantId().getUsername() : "N/A"));
-        detailsLayout.add(createDetailField("Estado", project.getState()));
-        detailsLayout.add(createDetailField("Fecha de Inicio",
-                project.getStartDate() != null ? project.getStartDate().toString() : "N/A"));
+                : getTranslation("noPromoter");
+        detailsLayout.add(createDetailField(getTranslation("promoter"), promoterDisplay));
+        detailsLayout.add(createDetailField(getTranslation("applicant"),
+                project.getApplicantId() != null ? project.getApplicantId().getUsername() : getTranslation("notAvailable")));
+        detailsLayout.add(createDetailField(getTranslation("state"), project.getState()));
+        detailsLayout.add(createDetailField(getTranslation("startDate"),
+                project.getStartDate() != null ? project.getStartDate().toString() : getTranslation("notAvailable")));
 
         // Download Memory file if exists
-        detailsLayout.add(createDownloadField("Memoria", project.getMemory(), project.getShortTitle() + "_memory.pdf"));
+        detailsLayout.add(createDownloadField(getTranslation("memory"), project.getMemory(), project.getShortTitle() + "_memory.pdf"));
 
         // Add buttons for Project Regulations and Technical Specifications
         if (project.getProjectRegulations() != null && project.getProjectRegulations().length > 0) {
-            detailsLayout.add(createDownloadField("Regulaciones del Proyecto", project.getProjectRegulations(), project.getShortTitle() + "_project_regulations.pdf"));
+            detailsLayout.add(createDownloadField(getTranslation("button.download.Regulations"), project.getProjectRegulations(), project.getShortTitle() + "_project_regulations.pdf"));
         } else {
-            detailsLayout.add(createNoFileMessage("Regulaciones del Proyecto"));
+            detailsLayout.add(createNoFileMessage(getTranslation("project.regulations")));
         }
 
         if (project.getTechnicalSpecifications() != null && project.getTechnicalSpecifications().length > 0) {
-            detailsLayout.add(createDownloadField("Especificaciones Técnicas", project.getTechnicalSpecifications(), project.getShortTitle() + "_technical_specifications.pdf"));
+            detailsLayout.add(createDownloadField(getTranslation("button.download.Specifications"), project.getTechnicalSpecifications(), project.getShortTitle() + "_technical_specifications.pdf"));
         } else {
-            detailsLayout.add(createNoFileMessage("Especificaciones Técnicas"));
+            detailsLayout.add(createNoFileMessage(getTranslation("technical.specifications")));
         }
 
-        Button closeButton = new Button("Cerrar", event -> dialog.close());
+        Button closeButton = new Button(getTranslation("button.close"), event -> dialog.close());
         HorizontalLayout footer = new HorizontalLayout(closeButton);
         footer.setWidthFull();
         footer.setJustifyContentMode(JustifyContentMode.END);
@@ -236,7 +236,7 @@ public class Home extends VerticalLayout {
         );
         resource.setContentType("application/pdf"); // Adjust the type according to the file
 
-        Anchor downloadLink = new Anchor(resource, "Descargar " + label);
+        Anchor downloadLink = new Anchor(resource, getTranslation("button.download")+ " " + label);
         downloadLink.getElement().setAttribute("download", true);
         downloadLink.getStyle().set("margin-top", "5px");
         downloadLink.getStyle().set("display", "inline-block");
@@ -264,7 +264,7 @@ public class Home extends VerticalLayout {
                 .set("margin-bottom", "0")
                 .set("text-align", "left");
 
-        Paragraph noFileMessage = new Paragraph("No se ha subido ningún archivo.");
+        Paragraph noFileMessage = new Paragraph(getTranslation("no.file.uploaded"));
         noFileMessage.getStyle()
                 .set("font-size", "16px")
                 .set("font-weight", "normal")
@@ -305,34 +305,34 @@ public class Home extends VerticalLayout {
 
     private void openNewProjectDialog() {
         Dialog dialog = new Dialog();
-        dialog.setHeaderTitle("Nuevo Proyecto");
+        dialog.setHeaderTitle(getTranslation("newProject"));
 
         FormLayout formLayout = new FormLayout();
 
-        TextField titleField = new TextField("Título");
-        TextField shortTitleField = new TextField("Título Corto");
-        TextField scopeField = new TextField("Alcance");
-        DatePicker startDatePicker = new DatePicker("Fecha de Inicio");
+        TextField titleField = new TextField(getTranslation("title"));
+        TextField shortTitleField = new TextField(getTranslation("shortTitle"));
+        TextField scopeField = new TextField(getTranslation("scope"));
+        DatePicker startDatePicker = new DatePicker(getTranslation("startDate"));
 
         VerticalLayout memoryUploadContainer = createStyledUpload(
-                "Memoria",
-                "Subir Memoria",
-                new MemoryBuffer(),
-                ".pdf", ".docx", ".txt"
+            getTranslation("memory"),
+            getTranslation("upload.memory"),
+            new MemoryBuffer(),
+            ".pdf", ".docx", ".txt"
         );
 
         VerticalLayout regulationsUploadContainer = createStyledUpload(
-                "Regulaciones del Proyecto",
-                "Subir Regulaciones",
-                new MemoryBuffer(),
-                ".pdf", ".docx", ".txt"
+            getTranslation("project.regulations"),
+            getTranslation("upload.regulations"),
+            new MemoryBuffer(),
+            ".pdf", ".docx", ".txt"
         );
 
         VerticalLayout specificationsUploadContainer = createStyledUpload(
-                "Especificaciones Técnicas",
-                "Subir Especificaciones",
-                new MemoryBuffer(),
-                ".pdf", ".docx", ".txt"
+            getTranslation("technical.specifications"),
+            getTranslation("upload.specifications"),
+            new MemoryBuffer(),
+            ".pdf", ".docx", ".txt"
         );
 
         formLayout.add(
@@ -345,56 +345,75 @@ public class Home extends VerticalLayout {
                 specificationsUploadContainer
         );
 
-        Button saveButton = new Button("Guardar", event -> {
+        Button saveButton = new Button(getTranslation("button.save"), event -> {
             Project newProject = new Project();
+
+            // Validación de campos obligatorios
+            if (titleField.isEmpty()) {
+                Notification.show("El campo 'Título' es obligatorio.");
+                return;
+            }
             newProject.setTitle(titleField.getValue());
+
+            if (shortTitleField.isEmpty()) {
+                Notification.show("El campo 'Título Corto' es obligatorio.");
+                return;
+            }
             newProject.setShortTitle(shortTitleField.getValue());
+
+            if (scopeField.isEmpty()) {
+                Notification.show("El campo 'Alcance' es obligatorio.");
+                return;
+            }
             newProject.setScope(scopeField.getValue());
 
             LocalDate localDate = startDatePicker.getValue();
-            if (localDate != null) {
+            if (localDate == null) {
+                Notification.show("El campo 'Fecha de Inicio' es obligatorio.");
+                return;
+            } else {
                 Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
                 newProject.setStartDate(date);
             }
 
             Optional<AppUser> maybeUser = authenticatedUser.get();
             if (maybeUser.isEmpty()) {
-                Notification.show("No hay ningún usuario logueado. Por favor, inicia sesión.");
+                Notification.show("No hay un usuario autenticado. Por favor, inicie sesión.");
                 return;
             }
             AppUser currentUser = maybeUser.get();
             newProject.setApplicantId(currentUser);
 
             try {
-                // Set Memory file
+                // Validación de archivo de memoria
                 byte[] memoryContent = extractFileContent(memoryUploadContainer);
                 if (memoryContent != null) {
                     newProject.setMemory(memoryContent);
                 } else {
-                    Notification.show("Por favor, sube un archivo de memoria.");
+                    Notification.show("Debe subir un archivo de memoria del proyecto.");
                     return;
                 }
 
-                // Set Project Regulations file
+                // Validación de archivo de regulaciones del proyecto
                 byte[] regulationsContent = extractFileContent(regulationsUploadContainer);
                 if (regulationsContent != null) {
                     newProject.setProjectRegulations(regulationsContent);
                 } else {
-                    Notification.show("Por favor, sube un archivo de regulaciones del proyecto.");
+                    Notification.show("Debe subir un archivo de regulaciones del proyecto.");
                     return;
                 }
 
-                // Set Technical Specifications file
+                // Validación de especificaciones técnicas
                 byte[] specificationsContent = extractFileContent(specificationsUploadContainer);
                 if (specificationsContent != null) {
                     newProject.setTechnicalSpecifications(specificationsContent);
                 } else {
-                    Notification.show("Por favor, sube un archivo de especificaciones técnicas.");
+                    Notification.show("Debe subir un archivo de especificaciones técnicas.");
                     return;
                 }
 
             } catch (Exception e) {
-                Notification.show("Error al subir los archivos.");
+                Notification.show("Error al cargar los archivos. Por favor, intente nuevamente.");
                 e.printStackTrace();
                 return;
             }
@@ -404,7 +423,7 @@ public class Home extends VerticalLayout {
             dialog.close();
         });
 
-        Button cancelButton = new Button("Cancelar", event -> dialog.close());
+        Button cancelButton = new Button(getTranslation("cancel"), event -> dialog.close());
         HorizontalLayout footerLayout = new HorizontalLayout(saveButton, cancelButton);
 
         dialog.add(formLayout, footerLayout);
@@ -563,7 +582,7 @@ public class Home extends VerticalLayout {
             promoterComboBox.setItemLabelGenerator(AppUser::getUsername);
         } catch (Exception e) {
             e.printStackTrace();
-            Notification.show("Error al cargar los promotores.");
+            Notification.show(getTranslation("error.load.promoters"));
         }
     }
 }

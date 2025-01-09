@@ -1,10 +1,13 @@
 package grupo7.views.CIO;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
@@ -13,12 +16,18 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
 
 import grupo7.models.Project;
+import grupo7.models.keys.TechnicianProjectId;
+import grupo7.models.TechnicianProject;
+import grupo7.security.AuthenticatedUser;
+import grupo7.services.TechnicianProjectService;
+import grupo7.repositories.TechnicianProjectRepository;
 import grupo7.models.AppUser;
 import grupo7.services.ProjectService;
 import grupo7.services.EmailService;
@@ -27,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -37,21 +47,27 @@ import java.util.stream.Collectors;
  *
  * <p>This view is secured and only accessible to users with the "CIO" role.</p>
  */
-@PageTitle("Cio View")
+@PageTitle("Evaluar Proyectos")
 @Route("cio-dashboard")
 @RolesAllowed("CIO")
 @Menu(order = 3)
 public class CioView extends VerticalLayout {
 
+    private  AuthenticatedUser authenticatedUser ;
+    private  TechnicianProjectId technicianProjectId;
+    private  TechnicianProjectService technicianProjectService;
+    private  TechnicianProject technicianProject;
     private final ProjectService projectService;
     private final EmailService emailService;
     private final Grid<Project> projectGrid = new Grid<>(Project.class);
+    private Grid<Project> evaluatedProjectsGrid = new Grid<>(Project.class, false);
+
     private final Binder<Project> binder = new Binder<>(Project.class);
 
     /**
      * NumberField for entering strategic alignment value.
      */
-    private final NumberField strategicAlignmentField = new NumberField("Alineamiento Estratégico");
+    private final NumberField strategicAlignmentField = new NumberField(getTranslation("alignment"));
 
     /**
      * Constructs a new {@code CioView} instance with the specified services.
@@ -60,55 +76,203 @@ public class CioView extends VerticalLayout {
      * @param emailService   the service to handle email notifications
      */
     @Autowired
-    public CioView(ProjectService projectService, EmailService emailService) {
+    public CioView(ProjectService projectService, EmailService emailService, AuthenticatedUser authenticatedUser, TechnicianProjectService technicianProjectService, TechnicianProjectRepository projectRepository) {
         this.projectService = projectService;
         this.emailService = emailService;
+        this.authenticatedUser = authenticatedUser;
+        this.technicianProjectService = technicianProjectService;
 
         binder.forField(strategicAlignmentField)
                 .bind(Project::getStrategicAlignment, Project::setStrategicAlignment);
 
         setSizeFull();
-        add(createProjectGrid());
+        add(createProjectGrids());
         refreshGrid();
     }
 
     /**
-     * Creates and configures the project grid to display relevant project information.
-     *
-     * @return the configured {@code Grid<Project>} component
-     */
-    private Grid<Project> createProjectGrid() {
+ * Creates and configures the layout to display project grids, including
+ * a grid for all projects and a separate grid for "Evaluated" projects.
+ *
+ * @return the configured {@code VerticalLayout} component
+ */
+private VerticalLayout createProjectGrids() {
 
-        projectGrid.removeAllColumns();
+    // Filtrar proyectos en estado "Presentado"
+    List<Project> presentedProjects = projectService.getAllProjects().stream()
+        .filter(project -> "Presentado".equalsIgnoreCase(project.getState()))
+        .collect(Collectors.toList());
+    
+    // Configurar el Grid
+    projectGrid.removeAllColumns();
 
-        projectGrid.addColumn(project -> project.getApplicantId() != null ? project.getApplicantId().getUsername() : "N/A")
-                .setHeader("Solicitante")
-                .setSortable(true);
+    projectGrid.addColumn(project -> project.getApplicantId() != null ? project.getApplicantId().getUsername() : getTranslation("notAvailable"))
+            .setHeader(getTranslation("applicant"))
+            .setSortable(true);
 
-        projectGrid.addColumn(Project::getShortTitle)
-                .setHeader("Título corto")
-                .setSortable(true);
+    projectGrid.addColumn(Project::getShortTitle)
+            .setHeader(getTranslation("shortTitle"))
+            .setSortable(true);
 
-        projectGrid.addColumn(Project::getState)
-                .setHeader("Estado")
-                .setSortable(true);
+    projectGrid.addColumn(Project::getState)
+            .setHeader(getTranslation("state"))
+            .setSortable(true);
 
-        projectGrid.addColumn(project -> project.getStartDate() != null ? project.getStartDate().toString() : "N/A")
-                .setHeader("Fecha")
-                .setSortable(true);
+    projectGrid.addColumn(project -> project.getStartDate() != null ? project.getStartDate().toString() : getTranslation("notAvailable"))
+            .setHeader(getTranslation("date"))
+            .setSortable(true);
 
-        projectGrid.asSingleSelect().addValueChangeListener(event -> editProject(event.getValue()));
+    projectGrid.asSingleSelect().addValueChangeListener(event -> editProject(event.getValue()));
 
-        projectGrid.addItemDoubleClickListener(event -> openProjectDetailsDialog(event.getItem()));
+    projectGrid.addItemDoubleClickListener(event -> openProjectDetailsDialog(event.getItem()));
 
-        return projectGrid;
+    projectGrid.setItems(presentedProjects);
+
+    // Filtrar y configurar el segundo Grid (Proyectos Evaluados)
+    Grid<Project> evaluatedProjectsGrid = new Grid<>(Project.class, false);
+
+    List<Project> evaluatedProjects = projectService.getAllProjects().stream()
+            .filter(project -> "Evaluado".equalsIgnoreCase(project.getState()))
+            .collect(Collectors.toList());
+
+    evaluatedProjectsGrid.addColumn(project -> project.getApplicantId() != null ? project.getApplicantId().getUsername() : getTranslation("notAvailable"))
+            .setHeader(getTranslation("applicant"))
+            .setSortable(true);
+
+    evaluatedProjectsGrid.addColumn(Project::getShortTitle)
+            .setHeader(getTranslation("shortTitle"))
+            .setSortable(true);
+
+    evaluatedProjectsGrid.addColumn(Project::getState)
+            .setHeader(getTranslation("state"))
+            .setSortable(true);
+
+    evaluatedProjectsGrid.addColumn(project -> project.getStartDate() != null ? project.getStartDate().toString() : getTranslation("notAvailable"))
+            .setHeader(getTranslation("date"))
+            .setSortable(true);       
+    
+    // Abrir un dialogo al hacer doble clic
+    evaluatedProjectsGrid.addItemDoubleClickListener(event -> showProjectDetailsDialog(event.getItem()));   
+
+    evaluatedProjectsGrid.setItems(evaluatedProjects);
+
+    // Organizar los Grids en un layout
+    VerticalLayout layout = new VerticalLayout();
+    layout.add(new H3(getTranslation("presentedProjects")), projectGrid);
+    layout.add(new H3(getTranslation("evaluatedProjects")), evaluatedProjectsGrid);
+
+    return layout;
+}
+
+/**
+ * Logic for accepting a project.
+ *
+ * @param project the project to accept
+*/
+private void acceptProject(Project project) {
+    // Cambiar el estado del proyecto a "aceptado"
+    project.setState(projectService.getNextState(project.getState(), true));  // true significa que el proyecto ha sido aceptado
+    projectService.saveProject(project);
+    Notification.show(getTranslation("projectAccepted") + ": " + project.getShortTitle());
+}
+
+/**
+ * Logic for rejecting a project.
+ *
+ * @param project the project to reject
+ */
+private void rejectProject(Project project) {
+    // Cambiar el estado del proyecto a "no aceptado"
+    project.setState(projectService.getNextState(project.getState(), false));  // false significa que el proyecto ha sido rechazado
+    projectService.saveProject(project); // Guardar cambios
+    Notification.show(getTranslation("projectRejected") + ": " + project.getShortTitle());
+}
+/**
+ * Opens a dialog showing the details of the selected project with "Accept" and "Reject" buttons.
+ *
+ * @param project the project to display in the dialog
+ */
+private void showProjectDetailsDialog(Project project) {
+    Dialog dialog = new Dialog();
+    dialog.setWidth("80%");
+    dialog.setHeight("80%");
+
+    VerticalLayout detailsLayout = new VerticalLayout();
+    detailsLayout.add(new H4(getTranslation("details.project")));
+    detailsLayout.add(new Paragraph(getTranslation("applicant") + ": " + 
+        (project.getApplicantId() != null ? project.getApplicantId().getUsername() : getTranslation("notAvailable"))));
+    detailsLayout.add(new Paragraph(getTranslation("shortTitle") + ": " + project.getShortTitle()));
+    detailsLayout.add(new Paragraph(getTranslation("state") + ": " + project.getState()));
+    detailsLayout.add(new Paragraph(getTranslation("date") + ": " + 
+        (project.getStartDate() != null ? project.getStartDate().toString() : getTranslation("notAvailable"))));
+
+    Optional<AppUser> maybeUser = authenticatedUser.get();
+    if (maybeUser.isEmpty()) {
+        Notification.show(getTranslation("no.logged.in"));
+        return;
     }
 
-    /**
-     * Edits the selected project by binding it to the form fields.
-     *
-     * @param project the selected {@code Project} to edit; {@code null} to clear the form
-     */
+    technicianProjectId = new TechnicianProjectId(project.getApplicantId().getId(), project.getId());
+    Optional<TechnicianProject> maybeProject = technicianProjectService.getTechnicianProjectById(technicianProjectId);
+
+    if (maybeProject.isEmpty()) {
+        Notification.show(getTranslation("noTechnicianProjectDetails"));
+        return;
+    }
+    technicianProject = maybeProject.get();
+
+    detailsLayout.add(new Paragraph(getTranslation("financialResources") + ": " +
+        (technicianProject.getFinancialResources() != null ? technicianProject.getFinancialResources().toString() : getTranslation("notAvailable"))));
+    detailsLayout.add(new Paragraph(getTranslation("humanResources") + ": " +
+        technicianProject.getHumanResources()));
+    detailsLayout.add(new Paragraph(getTranslation("projectAppraisal") + ": " +
+        (technicianProject.getProjectAppraisal() != null ? technicianProject.getProjectAppraisal().toString() : getTranslation("notAvailable"))));
+    detailsLayout.add(new Paragraph(getTranslation("technicalResources") + ": " +
+        (technicianProject.getTechnicalResources() != null ? technicianProject.getTechnicalResources() : getTranslation("notAvailable"))));
+
+
+    Button acceptButton = new Button(getTranslation("accept"), event -> {
+        acceptProject(project);
+        dialog.close();
+    });
+    acceptButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+    Button rejectButton = new Button(getTranslation("reject"), event -> {
+        rejectProject(project);
+        dialog.close();
+    });
+    rejectButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+
+    HorizontalLayout buttonLayout = new HorizontalLayout(acceptButton, rejectButton);
+
+    dialog.add(detailsLayout, buttonLayout);
+    dialog.open();
+}
+
+
+/**
+ * Refreshes the data in the grids after changes.
+ */
+private void refreshGrids() {
+    // Refrescar ambos grids
+    projectGrid.setItems(projectService.getAllProjects().stream()
+        .filter(project -> "Presentado".equalsIgnoreCase(project.getState()))
+        .collect(Collectors.toList()));
+    projectGrid.getDataProvider().refreshAll();
+
+    evaluatedProjectsGrid.setItems(projectService.getAllProjects().stream()
+        .filter(project -> "Evaluado".equalsIgnoreCase(project.getState()))
+        .collect(Collectors.toList()));
+    evaluatedProjectsGrid.getDataProvider().refreshAll();
+}
+
+
+
+/**
+ * Edits the selected project by binding it to the form fields.
+ *
+ * @param project the selected {@code Project} to edit; {@code null} to clear the form
+*/
     private void editProject(Project project) {
         if (project == null) {
             clearForm();
@@ -128,7 +292,7 @@ public class CioView extends VerticalLayout {
     private void openProjectDetailsDialog(Project project) {
         // Create a new dialog instance
         Dialog dialog = new Dialog();
-        dialog.setHeaderTitle("Detalles del Proyecto");
+        dialog.setHeaderTitle(getTranslation("details.project"));
 
         dialog.setWidth("80%");
         dialog.setHeight("80%");
@@ -149,39 +313,39 @@ public class CioView extends VerticalLayout {
         title.getStyle().set("margin-bottom", "10px");
         scrollableContent.add(title);
 
-        scrollableContent.add(createDetailField("Título Corto", project.getShortTitle()));
-        scrollableContent.add(createDetailField("Alcance", project.getScope()));
+        scrollableContent.add(createDetailField(getTranslation("shortTitle"), project.getShortTitle()));
+        scrollableContent.add(createDetailField(getTranslation("scope"), project.getScope()));
 
         String promoterDisplay = (project.getPromoterId() != null && !project.getPromoterId().isEmpty())
                 ? project.getPromoterId()
-                : "Sin promotor";
-        scrollableContent.add(createDetailField("Promotor", promoterDisplay));
+                : getTranslation("noPromoter");
+        scrollableContent.add(createDetailField(getTranslation("promoter"), promoterDisplay));
 
-        scrollableContent.add(createDetailField("Solicitante",
-                project.getApplicantId() != null ? project.getApplicantId().getUsername() : "N/A"));
-        scrollableContent.add(createDetailField("Estado", project.getState()));
-        scrollableContent.add(createDetailField("Fecha de Inicio",
-                project.getStartDate() != null ? project.getStartDate().toString() : "N/A"));
+        scrollableContent.add(createDetailField(getTranslation("applicant"),
+                project.getApplicantId() != null ? project.getApplicantId().getUsername() : getTranslation("notAvailable")));
+        scrollableContent.add(createDetailField(getTranslation("state"), project.getState()));
+        scrollableContent.add(createDetailField(getTranslation("startDate"),
+                project.getStartDate() != null ? project.getStartDate().toString() : getTranslation("notAvailable")));
+
+        if (project.getMemory() != null && project.getMemory().length > 0) {
+            scrollableContent.add(createDownloadField(getTranslation("button.download.Memory"), project.getMemory(),
+                    project.getShortTitle() + "_memory.pdf"));
+        } else {
+            scrollableContent.add(createNoFileMessage(getTranslation("memory")));
+        }
 
         if (project.getProjectRegulations() != null && project.getProjectRegulations().length > 0) {
-            scrollableContent.add(createDownloadField("Regulaciones del Proyecto", project.getProjectRegulations(),
+            scrollableContent.add(createDownloadField(getTranslation("button.download.Regulations"), project.getProjectRegulations(),
                     project.getShortTitle() + "_regulations.pdf"));
         } else {
-            scrollableContent.add(createNoFileMessage("Regulaciones del Proyecto"));
+            scrollableContent.add(createNoFileMessage(getTranslation("project.regulations")));
         }
 
         if (project.getTechnicalSpecifications() != null && project.getTechnicalSpecifications().length > 0) {
-            scrollableContent.add(createDownloadField("Especificaciones Técnicas", project.getTechnicalSpecifications(),
+            scrollableContent.add(createDownloadField(getTranslation("button.download.Specifications"), project.getTechnicalSpecifications(),
                     project.getShortTitle() + "_technical_specifications.pdf"));
         } else {
-            scrollableContent.add(createNoFileMessage("Especificaciones Técnicas"));
-        }
-
-        if (project.getMemory() != null && project.getMemory().length > 0) {
-            scrollableContent.add(createDownloadField("Memoria", project.getMemory(),
-                    project.getShortTitle() + "_memory.pdf"));
-        } else {
-            scrollableContent.add(createNoFileMessage("Memoria"));
+            scrollableContent.add(createNoFileMessage(getTranslation("technical.specifications")));
         }
 
         dialogLayout.add(scrollableContent);
@@ -199,14 +363,25 @@ public class CioView extends VerticalLayout {
      * @param label the label for which the file is missing
      * @return a {@code Paragraph} component with the no-file message
      */
-    private Paragraph createNoFileMessage(String label) {
-        Paragraph noFileMessage = new Paragraph("No se ha subido ningún archivo para " + label + ".");
+    private VerticalLayout createNoFileMessage(String label) {
+        VerticalLayout fieldLayout = new VerticalLayout();
+        fieldLayout.setSpacing(false);
+        fieldLayout.setPadding(false);
+
+        Paragraph labelComponent = new Paragraph(label);
+        labelComponent.getStyle()
+                .set("color", "darkgray")
+                .set("font-weight", "bold")
+                .set("margin-bottom", "0")
+                .set("text-align", "left");
+
+        Paragraph noFileMessage = new Paragraph(getTranslation("no.file.uploaded"));
         noFileMessage.getStyle()
                 .set("font-size", "16px")
                 .set("font-weight", "normal")
-                .set("margin-top", "5px")
-                .set("color", "darkred");
-        return noFileMessage;
+                .set("margin-top", "5px");
+        fieldLayout.add(labelComponent, noFileMessage);
+        return fieldLayout;
     }
 
     /**
@@ -220,13 +395,18 @@ public class CioView extends VerticalLayout {
     private VerticalLayout createEvaluationForm(Project project, Dialog dialog) {
         strategicAlignmentField.setValue(project.getStrategicAlignment() != null ? project.getStrategicAlignment() : 0.0);
 
-        Button saveButton = new Button("Guardar", event -> {
+        Button saveButton = new Button(getTranslation("button.save"), event -> {
             savePrioritization(project, dialog);
         });
 
+        Button closeButton = new Button(getTranslation("button.close"), event -> {
+            dialog.close();
+        });        
+
         HorizontalLayout formLayout = new HorizontalLayout(
                 strategicAlignmentField,
-                saveButton
+                saveButton,
+                closeButton
         );
         formLayout.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
         formLayout.setWidthFull();
@@ -259,32 +439,31 @@ public class CioView extends VerticalLayout {
 
                 if (applicant != null) {
                     String email = applicant.getEmail();
-                    String subject = "Su proyecto ha sido puntuado";
+                    String subject = getTranslation("email.subject"); // Traducción del asunto
                     String message = String.format(
-                            "Estimado/a %s,\n\nSu proyecto titulado '%s' ha sido puntuado con el siguiente valor:\n" +
-                                    "- Alineamiento Estratégico: %.1f\n\nGracias por su participación.",
+                            getTranslation("email.message"), // Traducción del cuerpo del mensaje
                             applicant.getUsername(),
                             project.getTitle(),
                             alignmentValue
                     );
-
+                
                     try {
                         emailService.sendEmail(email, subject, message);
-                        Notification.show("Proyecto puntuado y correo enviado.", 3000, Notification.Position.BOTTOM_START);
+                        Notification.show(getTranslation("notification.projectScored"), 3000, Notification.Position.BOTTOM_START);
                     } catch (Exception e) {
                         e.printStackTrace();
-                        Notification.show("Error al enviar el correo.", 3000, Notification.Position.BOTTOM_START)
+                        Notification.show(getTranslation("notification.errorSendingEmail"), 3000, Notification.Position.BOTTOM_START)
                                 .addThemeVariants(NotificationVariant.LUMO_ERROR);
                     }
-                }
+                }                
 
                 projectService.saveProject(project);
 
                 refreshGrid();
                 dialog.close();
             } else {
-                Notification.show("Por favor, ingrese un valor de alineamiento estratégico.", 3000, Notification.Position.MIDDLE)
-                        .addThemeVariants(NotificationVariant.LUMO_WARNING);
+                Notification.show(getTranslation("notification.missingStrategicAlignment"), 3000, Notification.Position.MIDDLE)
+                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
         }
     }
@@ -302,7 +481,7 @@ public class CioView extends VerticalLayout {
      */
     private void refreshGrid() {
         List<Project> presentedProjects = projectService.getAllProjects().stream()
-                .filter(project -> "presentado".equalsIgnoreCase(project.getState()))
+                .filter(project -> "Presentado".equalsIgnoreCase(project.getState()))
                 .collect(Collectors.toList());
         projectGrid.setItems(presentedProjects);
     }
@@ -336,14 +515,14 @@ public class CioView extends VerticalLayout {
             );
             resource.setContentType(determineContentType(fileName));
 
-            Anchor downloadLink = new Anchor(resource, "Descargar " + label);
+            Anchor downloadLink = new Anchor(resource, getTranslation("button.download") + label);
             downloadLink.getElement().setAttribute("download", true);
             downloadLink.getStyle().set("margin-top", "5px");
             downloadLink.getStyle().set("display", "inline-block");
 
             fieldLayout.add(labelComponent, downloadLink);
         } else {
-            Paragraph noFileMessage = new Paragraph("No se ha subido ningún archivo.");
+            Paragraph noFileMessage = new Paragraph(getTranslation("no.file.uploaded"));
             noFileMessage.getStyle()
                     .set("font-size", "16px")
                     .set("font-weight", "normal")

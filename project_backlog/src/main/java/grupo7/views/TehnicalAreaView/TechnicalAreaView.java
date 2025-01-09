@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  * Vista de área técnica para técnicos.
  * Permite listar proyectos y evaluarlos técnicamente con una puntuación.
  */
-@PageTitle("Technical-View")
+@PageTitle("Evaluar Proyectos")
 @Route("/technical-area")
 @Menu(order = 2)
 @RolesAllowed("TECHNICAL")
@@ -82,7 +82,7 @@ public class TechnicalAreaView extends VerticalLayout {
         );
         resource.setContentType("application/pdf"); // Adjust the type according to the file
 
-        Anchor downloadLink = new Anchor(resource, "Descargar " + label);
+        Anchor downloadLink = new Anchor(resource, getTranslation("button.download.Memory"));
         downloadLink.getElement().setAttribute("download", true);
         downloadLink.getStyle().set("margin-top", "5px");
         downloadLink.getStyle().set("display", "inline-block");
@@ -105,7 +105,7 @@ public class TechnicalAreaView extends VerticalLayout {
                 .set("margin-bottom", "0")
                 .set("text-align", "left");
 
-        Paragraph noFileMessage = new Paragraph("No se ha subido ningún archivo.");
+        Paragraph noFileMessage = new Paragraph(getTranslation("no.file.uploaded"));
         noFileMessage.getStyle()
                 .set("font-size", "16px")
                 .set("font-weight", "normal")
@@ -120,13 +120,12 @@ public class TechnicalAreaView extends VerticalLayout {
      * Configura la tabla que muestra los proyectos, incluyendo columnas y acciones.
      */
     private void configureGrid() {
-        projectGrid.addColumn(Project::getTitle).setHeader("Nombre del Proyecto").setSortable(true);
-        projectGrid.addColumn(Project::getStrategicAlignment).setHeader("Calificación del CIO");
-        projectGrid.addColumn(Project::getState).setHeader("Estado").setSortable(true);
-
+        projectGrid.addColumn(Project::getTitle).setHeader(getTranslation("evaluate.title")).setSortable(true);
+        projectGrid.addColumn(Project::getStrategicAlignment).setHeader(getTranslation("note"));
+        projectGrid.addColumn(Project::getState).setHeader(getTranslation("state")).setSortable(true);
 
         projectGrid.addComponentColumn(project -> {
-            Button rateButton = new Button("Evaluar");
+            Button rateButton = new Button(getTranslation("evaluateButton"));
 
             // Habilitar el botón solo si el estado del proyecto es "alineado"
             rateButton.setEnabled("alineado".equalsIgnoreCase(project.getState()));
@@ -134,8 +133,7 @@ public class TechnicalAreaView extends VerticalLayout {
             rateButton.addClickListener(click -> openRatingDialog(project));
 
             return rateButton;
-        }).setHeader("Acciones");
-
+        }).setHeader(getTranslation("evaluate.title"));
     }
 
     /**
@@ -169,24 +167,24 @@ public class TechnicalAreaView extends VerticalLayout {
         projectInfoLayout.getStyle().set("overflow-y", "auto");
 
         // Información del proyecto
-        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Título: " + project.getTitle()));
-        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Promotor/a: " + project.getPromoterId()));
-        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Alcance: " + project.getScope()));
-        projectInfoLayout.add(new com.vaadin.flow.component.html.Span("Fecha de comienzo: " + project.getStartDate()));
+        projectInfoLayout.add(new com.vaadin.flow.component.html.Span(getTranslation("title") + ": " + project.getTitle()));
+        projectInfoLayout.add(new com.vaadin.flow.component.html.Span(getTranslation("promoter") + ": " + project.getPromoterId()));
+        projectInfoLayout.add(new com.vaadin.flow.component.html.Span(getTranslation("scope") + ": " + project.getScope()));
+        projectInfoLayout.add(new com.vaadin.flow.component.html.Span(getTranslation("startDate") + ": " + project.getStartDate()));
         // Download Memory file if exists
-        projectInfoLayout.add(createDownloadField("Memoria", project.getMemory(), project.getShortTitle() + "_memory.pdf"));
+        projectInfoLayout.add(createDownloadField(getTranslation("button.download.Memory"), project.getMemory(), project.getShortTitle() + "_memory.pdf"));
 
         // Añadir botones para descargar archivos relacionados
         if (project.getProjectRegulations() != null && project.getProjectRegulations().length > 0) {
-            projectInfoLayout.add(createDownloadField("Regulaciones del Proyecto", project.getProjectRegulations(), project.getShortTitle() + "_project_regulations.pdf"));
+            projectInfoLayout.add(createDownloadField(getTranslation("button.download.Regulations"), project.getProjectRegulations(), project.getShortTitle() + "_project_regulations.pdf"));
         } else {
-            projectInfoLayout.add(createNoFileMessage("Regulaciones del Proyecto"));
+            projectInfoLayout.add(createNoFileMessage(getTranslation("project.regulations")));
         }
 
         if (project.getTechnicalSpecifications() != null && project.getTechnicalSpecifications().length > 0) {
-            projectInfoLayout.add(createDownloadField("Especificaciones Técnicas", project.getTechnicalSpecifications(), project.getShortTitle() + "_technical_specifications.pdf"));
+            projectInfoLayout.add(createDownloadField(getTranslation("button.download.Specifications"), project.getTechnicalSpecifications(), project.getShortTitle() + "_technical_specifications.pdf"));
         } else {
-            projectInfoLayout.add(createNoFileMessage("Especificaciones Técnicas"));
+            projectInfoLayout.add(createNoFileMessage(getTranslation("technical.specifications")));
         }
 
         // Controles del cuadro de diálogo
@@ -196,27 +194,29 @@ public class TechnicalAreaView extends VerticalLayout {
         controlsLayout.getStyle().set("border-top", "1px solid #ccc");
 
         // Campo para ingresar la puntuación
-        NumberField ratingField = new NumberField("Puntuación Técnica");
+        NumberField ratingField = new NumberField(getTranslation(getTranslation("rating")));
         ratingField.setMin(0);
         ratingField.setMax(10);
         controlsLayout.add(ratingField);
 
         // Campo para recursos humanos
-        NumberField humanResourcesField = new NumberField("Recursos Humanos");
+        NumberField humanResourcesField = new NumberField(getTranslation("resources.human"));
+
         humanResourcesField.setMin(0);
         controlsLayout.add(humanResourcesField);
 
         // Campo para recursos financieros
-        NumberField financialResourcesField = new NumberField("Recursos Financieros");
+        NumberField financialResourcesField = new NumberField(getTranslation("resources.financial"));
+
         financialResourcesField.setMin(0);
         controlsLayout.add(financialResourcesField);
 
         // Campo para recursos técnicos
-        com.vaadin.flow.component.textfield.TextField technicalResourcesField = new com.vaadin.flow.component.textfield.TextField("Recursos Técnicos");
+        com.vaadin.flow.component.textfield.TextField technicalResourcesField = new com.vaadin.flow.component.textfield.TextField(getTranslation("technicalResources"));
         controlsLayout.add(technicalResourcesField);
 
         // Botones
-        Button saveButton = new Button("Guardar", event -> {
+        Button saveButton = new Button(getTranslation("button.save"), event -> {
             if (ratingField.getValue() != null && humanResourcesField.getValue() != null && financialResourcesField.getValue() != null && !technicalResourcesField.isEmpty()) {
                 Double rating = ratingField.getValue();
                 int humanResources = humanResourcesField.getValue().intValue();
@@ -231,17 +231,17 @@ public class TechnicalAreaView extends VerticalLayout {
                         financialResources,
                         technicalResources
                 );
-
-                Notification.show("Evaluación guardada: Puntuación " + rating + ", Recursos Humanos " + humanResources + ", Recursos Financieros " + financialResources + ", Recursos Técnicos " + technicalResources);
+                
+                Notification.show(getTranslation("notification.savedEvaluation1") + rating + ", " + getTranslation("notification.savedEvaluation2")  + humanResources + ", " + getTranslation("notification.savedEvaluation3") + financialResources + ", "+ getTranslation("notification.savedEvaluation4") + technicalResources);
                 dialog.close();
                 loadProjects(); // Recargar proyectos
                 refreshGrid();
             } else {
-                Notification.show("Por favor, completa todos los campos.");
+                Notification.show(getTranslation("please.upload.field"));
             }
         });
 
-        Button cancelButton = new Button("Cancelar", event -> dialog.close());
+        Button cancelButton = new Button(getTranslation("cancel"), event -> dialog.close());
 
         // Añadir botones a los controles
         controlsLayout.add(saveButton, cancelButton);
@@ -278,7 +278,7 @@ public class TechnicalAreaView extends VerticalLayout {
         if (authentication != null && authentication.isAuthenticated()) {
             return Long.valueOf(authentication.getName());
         }
-        throw new IllegalStateException("Usuario no autenticado.");
+        throw new IllegalStateException(getTranslation("no.logged.in"));
     }
 
 
