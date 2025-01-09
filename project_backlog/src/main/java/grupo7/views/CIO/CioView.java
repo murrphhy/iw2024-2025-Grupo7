@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
  *
  * <p>This view is secured and only accessible to users with the "CIO" role.</p>
  */
-@PageTitle("Cio View")
+@PageTitle("Evaluar Proyectos")
 @Route("cio-dashboard")
 @RolesAllowed("CIO")
 @Menu(order = 3)

@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  * Vista de área técnica para técnicos.
  * Permite listar proyectos y evaluarlos técnicamente con una puntuación.
  */
-@PageTitle("Technical-view")
+@PageTitle("Evaluar Proyectos")
 @Route("/technical-area")
 @Menu(order = 2)
 @RolesAllowed("TECHNICAL")

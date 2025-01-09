@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * View to display projects requested by the authenticated user.
  */
-@PageTitle("My projects")
+@PageTitle("Mis Projectos")
 @Route("/my-projects")
 @Menu(order = 4)
 @PermitAll

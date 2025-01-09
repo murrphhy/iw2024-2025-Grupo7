@@ -27,7 +27,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 
-@PageTitle("Admin Panel")
+@PageTitle("Panel Administrador")
 @Route("/admin-panel")
 @Menu(order = 3)
 @RolesAllowed("ADMINISTRATOR")
