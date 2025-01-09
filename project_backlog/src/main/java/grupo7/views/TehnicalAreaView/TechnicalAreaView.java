@@ -178,13 +178,13 @@ public class TechnicalAreaView extends VerticalLayout {
         if (project.getProjectRegulations() != null && project.getProjectRegulations().length > 0) {
             projectInfoLayout.add(createDownloadField(getTranslation("button.download.Regulations"), project.getProjectRegulations(), project.getShortTitle() + "_project_regulations.pdf"));
         } else {
-            projectInfoLayout.add(createNoFileMessage(getTranslation("no.file.uploaded")));
+            projectInfoLayout.add(createNoFileMessage(getTranslation("project.regulations")));
         }
 
         if (project.getTechnicalSpecifications() != null && project.getTechnicalSpecifications().length > 0) {
             projectInfoLayout.add(createDownloadField(getTranslation("button.download.Specifications"), project.getTechnicalSpecifications(), project.getShortTitle() + "_technical_specifications.pdf"));
         } else {
-            projectInfoLayout.add(createNoFileMessage(getTranslation("no.file.uploaded")));
+            projectInfoLayout.add(createNoFileMessage(getTranslation("technical.specifications")));
         }
 
         // Controles del cuadro de diálogo
@@ -212,7 +212,7 @@ public class TechnicalAreaView extends VerticalLayout {
         controlsLayout.add(financialResourcesField);
 
         // Campo para recursos técnicos
-        com.vaadin.flow.component.textfield.TextField technicalResourcesField = new com.vaadin.flow.component.textfield.TextField("Recursos Técnicos");
+        com.vaadin.flow.component.textfield.TextField technicalResourcesField = new com.vaadin.flow.component.textfield.TextField(getTranslation("technicalResources"));
         controlsLayout.add(technicalResourcesField);
 
         // Botones
@@ -231,8 +231,8 @@ public class TechnicalAreaView extends VerticalLayout {
                         financialResources,
                         technicalResources
                 );
-                Notification.show(getTranslation("notification.savedEvaluation", rating, humanResources, financialResources, technicalResources));
-                /*Notification.show("Evaluación guardada: Puntuación " + rating + ", Recursos Humanos " + humanResources + ", Recursos Financieros " + financialResources + ", Recursos Técnicos " + technicalResources);*/
+                
+                Notification.show(getTranslation("notification.savedEvaluation1") + rating + ", " + getTranslation("notification.savedEvaluation2")  + humanResources + ", " + getTranslation("notification.savedEvaluation3") + financialResources + ", "+ getTranslation("notification.savedEvaluation4") + technicalResources);
                 dialog.close();
                 loadProjects(); // Recargar proyectos
                 refreshGrid();

@@ -60,6 +60,8 @@ public class CioView extends VerticalLayout {
     private final ProjectService projectService;
     private final EmailService emailService;
     private final Grid<Project> projectGrid = new Grid<>(Project.class);
+    private Grid<Project> evaluatedProjectsGrid = new Grid<>(Project.class, false);
+
     private final Binder<Project> binder = new Binder<>(Project.class);
 
     /**
@@ -156,12 +158,35 @@ private VerticalLayout createProjectGrids() {
 
     // Organizar los Grids en un layout
     VerticalLayout layout = new VerticalLayout();
-    layout.add(new H3(getTranslation("allProjects")), projectGrid);
+    layout.add(new H3(getTranslation("presentedProjects")), projectGrid);
     layout.add(new H3(getTranslation("evaluatedProjects")), evaluatedProjectsGrid);
 
     return layout;
 }
 
+/**
+ * Logic for accepting a project.
+ *
+ * @param project the project to accept
+*/
+private void acceptProject(Project project) {
+    // Cambiar el estado del proyecto a "aceptado"
+    project.setState(projectService.getNextState(project.getState(), true));  // true significa que el proyecto ha sido aceptado
+    projectService.saveProject(project);
+    Notification.show(getTranslation("projectAccepted") + ": " + project.getShortTitle());
+}
+
+/**
+ * Logic for rejecting a project.
+ *
+ * @param project the project to reject
+ */
+private void rejectProject(Project project) {
+    // Cambiar el estado del proyecto a "no aceptado"
+    project.setState(projectService.getNextState(project.getState(), false));  // false significa que el proyecto ha sido rechazado
+    projectService.saveProject(project); // Guardar cambios
+    Notification.show(getTranslation("projectRejected") + ": " + project.getShortTitle());
+}
 /**
  * Opens a dialog showing the details of the selected project with "Accept" and "Reject" buttons.
  *
@@ -173,7 +198,7 @@ private void showProjectDetailsDialog(Project project) {
     dialog.setHeight("80%");
 
     VerticalLayout detailsLayout = new VerticalLayout();
-    detailsLayout.add(new H4(getTranslation("projectDetails")));
+    detailsLayout.add(new H4(getTranslation("details.project")));
     detailsLayout.add(new Paragraph(getTranslation("applicant") + ": " + 
         (project.getApplicantId() != null ? project.getApplicantId().getUsername() : getTranslation("notAvailable"))));
     detailsLayout.add(new Paragraph(getTranslation("shortTitle") + ": " + project.getShortTitle()));
@@ -224,36 +249,23 @@ private void showProjectDetailsDialog(Project project) {
     dialog.open();
 }
 
-/**
- * Logic for accepting a project.
- *
- * @param project the project to accept
-*/
-private void acceptProject(Project project) {
-    project.setState("Aceptado");
-    projectService.saveProject(project);
-    Notification.show(getTranslation("projectAccepted") + ": " + project.getShortTitle());
-}
-
-/**
- * Logic for rejecting a project.
- *
- * @param project the project to reject
- */
-private void rejectProject(Project project) {
-    project.setState("No Aceptado");
-    projectService.saveProject(project); // Guardar cambios
-    Notification.show(getTranslation("projectRejected") + ": " + project.getShortTitle());
-    refreshGrids();
-}
 
 /**
  * Refreshes the data in the grids after changes.
  */
 private void refreshGrids() {
-    projectGrid.setItems(projectService.getAllProjects());
+    // Refrescar ambos grids
+    projectGrid.setItems(projectService.getAllProjects().stream()
+        .filter(project -> "Presentado".equalsIgnoreCase(project.getState()))
+        .collect(Collectors.toList()));
     projectGrid.getDataProvider().refreshAll();
+
+    evaluatedProjectsGrid.setItems(projectService.getAllProjects().stream()
+        .filter(project -> "Evaluado".equalsIgnoreCase(project.getState()))
+        .collect(Collectors.toList()));
+    evaluatedProjectsGrid.getDataProvider().refreshAll();
 }
+
 
 
 /**
@@ -315,25 +327,25 @@ private void refreshGrids() {
         scrollableContent.add(createDetailField(getTranslation("startDate"),
                 project.getStartDate() != null ? project.getStartDate().toString() : getTranslation("notAvailable")));
 
+        if (project.getMemory() != null && project.getMemory().length > 0) {
+            scrollableContent.add(createDownloadField(getTranslation("button.download.Memory"), project.getMemory(),
+                    project.getShortTitle() + "_memory.pdf"));
+        } else {
+            scrollableContent.add(createNoFileMessage(getTranslation("memory")));
+        }
+
         if (project.getProjectRegulations() != null && project.getProjectRegulations().length > 0) {
             scrollableContent.add(createDownloadField(getTranslation("button.download.Regulations"), project.getProjectRegulations(),
                     project.getShortTitle() + "_regulations.pdf"));
         } else {
-            scrollableContent.add(createNoFileMessage(getTranslation("no.file.uploaded")));
+            scrollableContent.add(createNoFileMessage(getTranslation("project.regulations")));
         }
 
         if (project.getTechnicalSpecifications() != null && project.getTechnicalSpecifications().length > 0) {
             scrollableContent.add(createDownloadField(getTranslation("button.download.Specifications"), project.getTechnicalSpecifications(),
                     project.getShortTitle() + "_technical_specifications.pdf"));
         } else {
-            scrollableContent.add(createNoFileMessage(getTranslation("no.file.uploaded")));
-        }
-
-        if (project.getMemory() != null && project.getMemory().length > 0) {
-            scrollableContent.add(createDownloadField(getTranslation("button.download.Memory"), project.getMemory(),
-                    project.getShortTitle() + "_memory.pdf"));
-        } else {
-            scrollableContent.add(createNoFileMessage(getTranslation("no.file.uploaded")));
+            scrollableContent.add(createNoFileMessage(getTranslation("technical.specifications")));
         }
 
         dialogLayout.add(scrollableContent);
@@ -351,14 +363,25 @@ private void refreshGrids() {
      * @param label the label for which the file is missing
      * @return a {@code Paragraph} component with the no-file message
      */
-    private Paragraph createNoFileMessage(String label) {
-        Paragraph noFileMessage = new Paragraph(getTranslation("no.file.uploaded") + "para " + label + ".");
+    private VerticalLayout createNoFileMessage(String label) {
+        VerticalLayout fieldLayout = new VerticalLayout();
+        fieldLayout.setSpacing(false);
+        fieldLayout.setPadding(false);
+
+        Paragraph labelComponent = new Paragraph(label);
+        labelComponent.getStyle()
+                .set("color", "darkgray")
+                .set("font-weight", "bold")
+                .set("margin-bottom", "0")
+                .set("text-align", "left");
+
+        Paragraph noFileMessage = new Paragraph(getTranslation("no.file.uploaded"));
         noFileMessage.getStyle()
                 .set("font-size", "16px")
                 .set("font-weight", "normal")
-                .set("margin-top", "5px")
-                .set("color", "darkred");
-        return noFileMessage;
+                .set("margin-top", "5px");
+        fieldLayout.add(labelComponent, noFileMessage);
+        return fieldLayout;
     }
 
     /**
@@ -376,9 +399,14 @@ private void refreshGrids() {
             savePrioritization(project, dialog);
         });
 
+        Button closeButton = new Button(getTranslation("button.close"), event -> {
+            dialog.close();
+        });        
+
         HorizontalLayout formLayout = new HorizontalLayout(
                 strategicAlignmentField,
-                saveButton
+                saveButton,
+                closeButton
         );
         formLayout.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
         formLayout.setWidthFull();
@@ -435,7 +463,7 @@ private void refreshGrids() {
                 dialog.close();
             } else {
                 Notification.show(getTranslation("notification.missingStrategicAlignment"), 3000, Notification.Position.MIDDLE)
-                        .addThemeVariants(NotificationVariant.LUMO_WARNING);
+                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
         }
     }
@@ -453,7 +481,7 @@ private void refreshGrids() {
      */
     private void refreshGrid() {
         List<Project> presentedProjects = projectService.getAllProjects().stream()
-                .filter(project -> getTranslation("project.state.presented").equalsIgnoreCase(project.getState()))
+                .filter(project -> "Presentado".equalsIgnoreCase(project.getState()))
                 .collect(Collectors.toList());
         projectGrid.setItems(presentedProjects);
     }

@@ -91,8 +91,8 @@ public class Home extends VerticalLayout {
         projectGrid.addColumn(project ->
                 project.getApplicantId() != null
                         ? project.getApplicantId().getUsername()
-                        : "N/A"
-        ).setHeader(getTranslation("applicant"));
+                        : getTranslation("promoter")
+        ).setHeader(getTranslation("notAvailable"));
 
         projectGrid.addColumn(Project::getPromoterId).setHeader(getTranslation("promoter"));
 
@@ -192,13 +192,13 @@ public class Home extends VerticalLayout {
         if (project.getProjectRegulations() != null && project.getProjectRegulations().length > 0) {
             detailsLayout.add(createDownloadField(getTranslation("button.download.Regulations"), project.getProjectRegulations(), project.getShortTitle() + "_project_regulations.pdf"));
         } else {
-            detailsLayout.add(createNoFileMessage(getTranslation("no.file.uploaded")));
+            detailsLayout.add(createNoFileMessage(getTranslation("project.regulations")));
         }
 
         if (project.getTechnicalSpecifications() != null && project.getTechnicalSpecifications().length > 0) {
             detailsLayout.add(createDownloadField(getTranslation("button.download.Specifications"), project.getTechnicalSpecifications(), project.getShortTitle() + "_technical_specifications.pdf"));
         } else {
-            detailsLayout.add(createNoFileMessage(getTranslation("no.file.uploaded")));
+            detailsLayout.add(createNoFileMessage(getTranslation("technical.specifications")));
         }
 
         Button closeButton = new Button(getTranslation("button.close"), event -> dialog.close());
@@ -305,7 +305,7 @@ public class Home extends VerticalLayout {
 
     private void openNewProjectDialog() {
         Dialog dialog = new Dialog();
-        dialog.setHeaderTitle(getTranslation("new.project"));
+        dialog.setHeaderTitle(getTranslation("newProject"));
 
         FormLayout formLayout = new FormLayout();
 
@@ -345,7 +345,7 @@ public class Home extends VerticalLayout {
                 specificationsUploadContainer
         );
 
-        Button saveButton = new Button(getTranslation("save"), event -> {
+        Button saveButton = new Button(getTranslation("button.save"), event -> {
             Project newProject = new Project();
             newProject.setTitle(titleField.getValue());
             newProject.setShortTitle(shortTitleField.getValue());
