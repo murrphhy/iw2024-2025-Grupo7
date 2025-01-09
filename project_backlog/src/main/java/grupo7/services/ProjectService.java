@@ -97,7 +97,7 @@ public class ProjectService {
     
         return savedProject;
     }
-    
+
 
     /**
      * Handles project state transitions and sends email notifications as appropriate.
@@ -202,6 +202,23 @@ public class ProjectService {
                 }
                 break;
 
+            case "no aceptado":
+                // Notify the applicant if the state changes to "no aceptado"
+                if (!"no aceptado".equals(oldState)) {
+                    if (applicant != null && applicant.getEmail() != null) {
+                        String subject = "Tu proyecto no ha sido aceptado";
+                        String body = String.format(
+                                "Hola %s,\n\n" +
+                                        "Lamentablemente, tu proyecto '%s' no ha sido aceptado por el CIO.\n" +
+                                        "Te animamos a seguir mejorando tus ideas y presentar nuevas propuestas.\n\n" +
+                                        "Saludos,\nTu aplicación",
+                                applicant.getUsername(),
+                                project.getTitle());
+                        emailService.sendEmail(applicant.getEmail(), subject, body);
+                    }
+                }
+                break;
+
             case "rechazado":
                 // Notify the applicant if the state changes to "rechazado"
                 if (!"rechazado".equals(oldState)) {
@@ -228,7 +245,7 @@ public class ProjectService {
      * in a simple linear flow:
      * null/"" -> "presentado" -> "alineado" -> "evaluado"
      *
-     * "aceptado" or "rechazado" is not handled here;
+     * "aceptado" or "no aceptado" is not handled here;
      * those are manual decisions by the CIO.
      *
      * @param oldState the previous state (may be null or empty if new)
@@ -246,8 +263,7 @@ public class ProjectService {
             case "evaluado":
                 // Aquí es donde decides si el proyecto es "aceptado" o "no aceptado"
                 // El estado cambiaría en función de la acción tomada
-                // Si el proyecto es rechazado, cambiar a "No Aceptado"
-                return accepted ? "aceptado" : "no aceptado";  // Este estado no se modifica por sí solo, se actualiza con una acción de aceptación o rechazo
+                return accepted ? "aceptado" : "no aceptado";
             case "aceptado":
                 return oldState;  // Si ya está "aceptado", no cambia
             case "no aceptado":
@@ -256,8 +272,9 @@ public class ProjectService {
                 return oldState;  // Otros estados no cambiantes
         }
     }
-    
-    
+
+
+
 
     /**
      * Deletes a project by its ID.
