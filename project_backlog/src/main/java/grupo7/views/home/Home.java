@@ -347,54 +347,73 @@ public class Home extends VerticalLayout {
 
         Button saveButton = new Button(getTranslation("button.save"), event -> {
             Project newProject = new Project();
+
+            // Validación de campos obligatorios
+            if (titleField.isEmpty()) {
+                Notification.show("El campo 'Título' es obligatorio.");
+                return;
+            }
             newProject.setTitle(titleField.getValue());
+
+            if (shortTitleField.isEmpty()) {
+                Notification.show("El campo 'Título Corto' es obligatorio.");
+                return;
+            }
             newProject.setShortTitle(shortTitleField.getValue());
+
+            if (scopeField.isEmpty()) {
+                Notification.show("El campo 'Alcance' es obligatorio.");
+                return;
+            }
             newProject.setScope(scopeField.getValue());
 
             LocalDate localDate = startDatePicker.getValue();
-            if (localDate != null) {
+            if (localDate == null) {
+                Notification.show("El campo 'Fecha de Inicio' es obligatorio.");
+                return;
+            } else {
                 Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
                 newProject.setStartDate(date);
             }
 
             Optional<AppUser> maybeUser = authenticatedUser.get();
             if (maybeUser.isEmpty()) {
-                Notification.show(getTranslation("no.logged.in"));
+                Notification.show("No hay un usuario autenticado. Por favor, inicie sesión.");
                 return;
             }
             AppUser currentUser = maybeUser.get();
             newProject.setApplicantId(currentUser);
 
             try {
-                // Set Memory file
+                // Validación de archivo de memoria
                 byte[] memoryContent = extractFileContent(memoryUploadContainer);
                 if (memoryContent != null) {
                     newProject.setMemory(memoryContent);
                 } else {
-                    Notification.show(getTranslation("please.upload.memory"));
+                    Notification.show("Debe subir un archivo de memoria del proyecto.");
                     return;
                 }
 
-                // Set Project Regulations file
+                // Validación de archivo de regulaciones del proyecto
                 byte[] regulationsContent = extractFileContent(regulationsUploadContainer);
                 if (regulationsContent != null) {
                     newProject.setProjectRegulations(regulationsContent);
                 } else {
-                    Notification.show(getTranslation("please.upload.regulations"));
+                    Notification.show("Debe subir un archivo de regulaciones del proyecto.");
                     return;
                 }
 
-                // Set Technical Specifications file
+                // Validación de especificaciones técnicas
                 byte[] specificationsContent = extractFileContent(specificationsUploadContainer);
                 if (specificationsContent != null) {
                     newProject.setTechnicalSpecifications(specificationsContent);
                 } else {
-                    Notification.show(getTranslation("please.upload.specifications"));
+                    Notification.show("Debe subir un archivo de especificaciones técnicas.");
                     return;
                 }
 
             } catch (Exception e) {
-                Notification.show(getTranslation("file.upload.error"));
+                Notification.show("Error al cargar los archivos. Por favor, intente nuevamente.");
                 e.printStackTrace();
                 return;
             }
