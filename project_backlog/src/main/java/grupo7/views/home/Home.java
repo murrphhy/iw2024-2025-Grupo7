@@ -103,25 +103,7 @@ public class Home extends VerticalLayout {
         projectGrid.addColumn(project -> {
             Date d = project.getStartDate();
             return d != null ? d.toString() : getTranslation("notAvailable");
-        }).setHeader(getTranslation("date")).setTextAlign(ColumnTextAlign.END); // Right alignment
-
-        Optional<AppUser> maybeUser = authenticatedUser.get();
-        if (maybeUser.isPresent()) {
-            AppUser currentUser = maybeUser.get();
-            if (currentUser.getRole() == Role.PROMOTER) {
-                projectGrid.addComponentColumn(project -> {
-                    if (project.getPromoterId() == null) {
-                        Button assignButton = new Button(getTranslation("home.grid.assign"), e -> assignPromoter(project));
-                        assignButton.setIcon(VaadinIcon.USER_CHECK.create());
-                        assignButton.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
-                        return assignButton;
-                    } else {
-                        return new Button();
-                    }
-                }).setHeader(getTranslation("actions")).setWidth("180px").setFlexGrow(0);
-            }
-        }
-
+        }).setHeader(getTranslation("date")).setTextAlign(ColumnTextAlign.END);
 
         projectGrid.setItems(projectService.getAllProjects());
         projectGrid.setWidth("90%");
@@ -313,30 +295,32 @@ public class Home extends VerticalLayout {
         TextField shortTitleField = new TextField(getTranslation("shortTitle"));
         TextField scopeField = new TextField(getTranslation("scope"));
         DatePicker startDatePicker = new DatePicker(getTranslation("startDate"));
-        ComboBox<AppUser> promoterComboBox = new ComboBox<>("Promotor");
+        ComboBox<AppUser> promoterComboBox = new ComboBox<>(getTranslation("promoter"));
+
+        // Cargar promotores en el ComboBox
         promoterComboBox.setItems(userService.findAllByRole(Role.PROMOTER));
         promoterComboBox.setItemLabelGenerator(user -> user.getUsername() + " - " + user.getAcademicPosition());
 
-
+        // Contenedores para subir archivos
         VerticalLayout memoryUploadContainer = createStyledUpload(
-            getTranslation("memory"),
-            getTranslation("upload.memory"),
-            new MemoryBuffer(),
-            ".pdf", ".docx", ".txt"
+                getTranslation("memory"),
+                getTranslation("upload.memory"),
+                new MemoryBuffer(),
+                ".pdf", ".docx", ".txt"
         );
 
         VerticalLayout regulationsUploadContainer = createStyledUpload(
-            getTranslation("project.regulations"),
-            getTranslation("upload.regulations"),
-            new MemoryBuffer(),
-            ".pdf", ".docx", ".txt"
+                getTranslation("project.regulations"),
+                getTranslation("upload.regulations"),
+                new MemoryBuffer(),
+                ".pdf", ".docx", ".txt"
         );
 
         VerticalLayout specificationsUploadContainer = createStyledUpload(
-            getTranslation("technical.specifications"),
-            getTranslation("upload.specifications"),
-            new MemoryBuffer(),
-            ".pdf", ".docx", ".txt"
+                getTranslation("technical.specifications"),
+                getTranslation("upload.specifications"),
+                new MemoryBuffer(),
+                ".pdf", ".docx", ".txt"
         );
 
         formLayout.add(
@@ -381,6 +365,7 @@ public class Home extends VerticalLayout {
                 newProject.setStartDate(date);
             }
 
+            // Validar usuario autenticado
             Optional<AppUser> maybeUser = authenticatedUser.get();
             if (maybeUser.isEmpty()) {
                 Notification.show("No hay un usuario autenticado. Por favor, inicie sesión.");
@@ -388,6 +373,14 @@ public class Home extends VerticalLayout {
             }
             AppUser currentUser = maybeUser.get();
             newProject.setApplicantId(currentUser);
+
+            // Validación del ComboBox de promotores
+            AppUser selectedPromoter = promoterComboBox.getValue();
+            if (selectedPromoter == null) {
+                Notification.show("Debe seleccionar un promotor para el proyecto.");
+                return;
+            }
+            newProject.setPromoterId(selectedPromoter.getUsername()); // Asigna el username al promoterId
 
             try {
                 // Validación de archivo de memoria
@@ -434,6 +427,7 @@ public class Home extends VerticalLayout {
         dialog.add(formLayout, footerLayout);
         dialog.open();
     }
+
 
     /**
      * Extrae el contenido del archivo desde un contenedor de subida.

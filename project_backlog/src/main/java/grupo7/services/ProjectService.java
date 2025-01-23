@@ -108,12 +108,11 @@ public class ProjectService {
                 .orElseThrow(() -> new RuntimeException("No user with role ADMINISTRATOR found"));
 
         AppUser applicant = project.getApplicantId();
-        long longId = Long.parseLong(project.getPromoterId());
-
+        Optional<AppUser> promoter = userRepository.findByUsername(project.getPromoterId());
 
         switch (newState) {
             case "esperando aval":
-                Optional<AppUser> promoter = userRepository.findById(longId);
+
 
                 if (promoter.isPresent() && !"esperando aval".equals(oldState)) {
                     AppUser promoterUser = promoter.get();
@@ -121,14 +120,14 @@ public class ProjectService {
                     String body = String.format(
                             "Hola %s,\n\n" +
                                     "El usuario %s ha presentado un proyecto titulado '%s'.\n" +
-                                    "Por favor, revísalo y procede con su evaluación.\n\n" +
+                                    "El usuario ha requerido tu aval para el proyecto.\n\n" +
                                     "Saludos,\nTu aplicación",
                             promoterUser.getUsername(),
                             (applicant != null ? applicant.getUsername() : "solicitante"),
                             project.getTitle());
                     emailService.sendEmail(promoterUser.getEmail(), subject, body);
                 } else if (promoter.isEmpty()) {
-                    System.err.println("No se encontró el promotor con ID: " + longId);
+                    System.err.println("No se encontró el promotor");
                 }
                 break;
 
@@ -145,6 +144,18 @@ public class ProjectService {
                             (applicant != null ? applicant.getUsername() : "desconocido"),
                             project.getTitle());
                     emailService.sendEmail(cioUser.getEmail(), subject, body);
+
+                    if (applicant != null && applicant.getEmail() != null) {
+                        String subjectUser = "Estado de tu proyecto: PRESENTADO";
+                        String bodyUser = String.format(
+                                "Hola %s,\n\n" +
+                                        "Tu proyecto '%s' ha sido avalado por '%s'. Tu proceso pasa a ser evaluado por el CIO.\n\n" +
+                                        "Saludos,\nTu aplicación",
+                                applicant.getUsername(),
+                                project.getTitle(),
+                                promoter.isPresent() ? promoter.get().getUsername() : "tu promotor seleccionado");
+                        emailService.sendEmail(applicant.getEmail(), subjectUser, bodyUser);
+                    }
                 }
                 break;
 
