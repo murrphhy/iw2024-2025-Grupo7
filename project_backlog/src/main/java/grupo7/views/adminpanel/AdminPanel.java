@@ -65,10 +65,14 @@ public class AdminPanel extends Div {
 
         userGrid.addComponentColumn(user -> {
             Button editButton = new Button(getTranslation("action.edit"), e -> editUser(user));
-            Button deleteButton = new Button(getTranslation("action.delete"), e -> deleteUser(user));
+            Button deleteButton = new Button(getTranslation("action.delete"), e -> {
+                deleteUser(user);
+                Notification.show("Has eliminado el usuario con éxito", 3000, Notification.Position.MIDDLE);
+            });
             HorizontalLayout actions = new HorizontalLayout(editButton, deleteButton);
             return actions;
         }).setHeader(getTranslation("actions"));
+
 
         userGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
     }
