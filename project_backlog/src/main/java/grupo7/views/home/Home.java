@@ -313,6 +313,10 @@ public class Home extends VerticalLayout {
         TextField shortTitleField = new TextField(getTranslation("shortTitle"));
         TextField scopeField = new TextField(getTranslation("scope"));
         DatePicker startDatePicker = new DatePicker(getTranslation("startDate"));
+        ComboBox<AppUser> promoterComboBox = new ComboBox<>("Promotor");
+        promoterComboBox.setItems(userService.findAllByRole(Role.PROMOTER));
+        promoterComboBox.setItemLabelGenerator(user -> user.getUsername() + " - " + user.getAcademicPosition());
+
 
         VerticalLayout memoryUploadContainer = createStyledUpload(
             getTranslation("memory"),
@@ -340,6 +344,7 @@ public class Home extends VerticalLayout {
                 shortTitleField,
                 scopeField,
                 startDatePicker,
+                promoterComboBox,
                 memoryUploadContainer,
                 regulationsUploadContainer,
                 specificationsUploadContainer
