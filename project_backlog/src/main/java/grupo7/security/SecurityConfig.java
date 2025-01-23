@@ -38,7 +38,7 @@ public class SecurityConfig extends VaadinWebSecurity {
                 )
                 .formLogin(formLogin -> formLogin
                         .loginPage("/login")
-                        .defaultSuccessUrl("/", true)
+                        .defaultSuccessUrl("/home", true)
                         .permitAll()
                 );
         // Configuración de Vaadin

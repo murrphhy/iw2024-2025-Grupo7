@@ -43,20 +43,29 @@ public class TechnicianProjectService {
         }
     }
 
-    public void saveTechnicalRating(Long userId, Long projectId, Double rating, int humanResources, BigDecimal financialResources, String technicalResources) {
-        // Guardar la nota en TechnicianProject
+    public void saveTechnicalRating(Long userId, Long projectId, Double rating, int humanResources, BigDecimal financialResources, String humanResourcesComment, String financialResourcesComment) {
         TechnicianProjectId id = new TechnicianProjectId(userId, projectId);
         TechnicianProject technicianProject = technicianProjectRepository.findById(id)
-                .orElse(new TechnicianProject(userId, projectId, rating,humanResources, financialResources, technicalResources));
+                .orElse(new TechnicianProject(userId, projectId, rating, humanResources, financialResources, humanResourcesComment, financialResourcesComment));
+
         technicianProject.setProjectAppraisal(rating);
+        technicianProject.setHumanResources(humanResources);
+        technicianProject.setFinancialResources(financialResources);
+
+        // Guardar los comentarios
+        technicianProject.setHumanResourcesComment(humanResourcesComment);
+        technicianProject.setFinancialResourcesComment(financialResourcesComment);
+
         technicianProjectRepository.save(technicianProject);
 
-        // Actualizar el campo technical_suitability y estado en la tabla Project
+        // Actualizar el proyecto en la tabla Project (si necesario)
         Project project = projectService.getProjectById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró el proyecto con ID: " + projectId));
 
         project.setTechnicalSuitability(rating);
         project.setState("evaluado");
-        projectService.saveProject(project); // Asegúrate de que este método esté implementado en ProjectService
+        projectService.saveProject(project);
     }
+
+
 }

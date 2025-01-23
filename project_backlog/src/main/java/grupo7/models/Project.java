@@ -43,7 +43,6 @@ public class Project {
      * The call associated with this project.
      * This represents a many-to-one relationship where multiple projects 
      * can belong to a single call.
-     * 
      * - The `call_id` column stores the foreign key linking to the `Call` table.
      * - Mapped in the `Call` entity with the `projects` property.
      */

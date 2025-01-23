@@ -8,6 +8,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -201,38 +202,60 @@ public class TechnicalAreaView extends VerticalLayout {
 
         // Campo para recursos humanos
         NumberField humanResourcesField = new NumberField(getTranslation("resources.human"));
-
         humanResourcesField.setMin(0);
-        controlsLayout.add(humanResourcesField);
+
+        TextArea humanResourcesCommentField = new TextArea(getTranslation("Comentario sobre recursos humanos"));
+        humanResourcesCommentField.setPlaceholder(getTranslation("Deja tu comentario aquí..."));
+        humanResourcesCommentField.setWidthFull();
+
+        // Agregar los campos de recursos humanos al layout
+        controlsLayout.add(humanResourcesField, humanResourcesCommentField);
 
         // Campo para recursos financieros
         NumberField financialResourcesField = new NumberField(getTranslation("resources.financial"));
-
         financialResourcesField.setMin(0);
-        controlsLayout.add(financialResourcesField);
 
-        // Campo para recursos técnicos
-        com.vaadin.flow.component.textfield.TextField technicalResourcesField = new com.vaadin.flow.component.textfield.TextField(getTranslation("technicalResources"));
-        controlsLayout.add(technicalResourcesField);
+        TextArea financialResourcesCommentField = new TextArea(getTranslation("Comentario sobre recursos financieros"));
+        financialResourcesCommentField.setPlaceholder(getTranslation("Deja tu comentario aquí..."));
+        financialResourcesCommentField.setWidthFull();
 
-        // Botones
+        // Agregar los campos de recursos financieros al layout
+        controlsLayout.add(financialResourcesField, financialResourcesCommentField);
+
+
+
+        // Botón para guardar
         Button saveButton = new Button(getTranslation("button.save"), event -> {
-            if (ratingField.getValue() != null && humanResourcesField.getValue() != null && financialResourcesField.getValue() != null && !technicalResourcesField.isEmpty()) {
+            // Comprobar que los valores numéricos no sean nulos
+            if (ratingField.getValue() != null && humanResourcesField.getValue() != null && financialResourcesField.getValue() != null) {
                 Double rating = ratingField.getValue();
-                int humanResources = humanResourcesField.getValue().intValue();
-                BigDecimal financialResources = BigDecimal.valueOf(financialResourcesField.getValue());
-                String technicalResources = technicalResourcesField.getValue();
+                int humanResources = humanResourcesField.getValue().intValue();  // Convertir a int
+                BigDecimal financialResources = BigDecimal.valueOf(financialResourcesField.getValue());  // Convertir a BigDecimal
 
+                // Obtener los comentarios de los recursos (deben ser campos de texto, como TextArea)
+                String humanResourcesComment = humanResourcesCommentField.getValue();  // Comentario de recursos humanos
+                String financialResourcesComment = financialResourcesCommentField.getValue();  // Comentario de recursos financieros
+
+                // Llamada al servicio para guardar la evaluación
                 technicianProjectService.saveTechnicalRating(
                         project.getApplicantId().getId(),
                         project.getId(),
                         rating,
                         humanResources,
                         financialResources,
-                        technicalResources
+                        humanResourcesComment,
+                        financialResourcesComment
                 );
-                
-                Notification.show(getTranslation("notification.savedEvaluation1") + rating + ", " + getTranslation("notification.savedEvaluation2")  + humanResources + ", " + getTranslation("notification.savedEvaluation3") + financialResources + ", "+ getTranslation("notification.savedEvaluation4") + technicalResources);
+
+                // Mostrar notificación con los comentarios
+                Notification.show(
+                        getTranslation("notification.savedEvaluation1") + rating + ", " +
+                                getTranslation("notification.savedEvaluation2") + humanResources + ", "+ " (" + humanResourcesComment + ") " +
+                                getTranslation("notification.savedEvaluation3") + financialResources + ", "  + " ("+ financialResourcesComment + ") " +
+                                getTranslation("notification.savedEvaluation4") + "\n"
+                );
+
+
                 dialog.close();
                 loadProjects(); // Recargar proyectos
                 refreshGrid();
@@ -240,6 +263,7 @@ public class TechnicalAreaView extends VerticalLayout {
                 Notification.show(getTranslation("please.upload.field"));
             }
         });
+
 
         Button cancelButton = new Button(getTranslation("cancel"), event -> dialog.close());
 
