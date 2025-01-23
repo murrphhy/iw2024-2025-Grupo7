@@ -80,17 +80,13 @@ public class ProjectService {
         }
         String oldState = oldStateRef.get();
     
-        // Asumiendo que 'accepted' es un valor conocido en este contexto
-        boolean accepted = determineIfAccepted(project); // Lógica para determinar si el proyecto fue aceptado o rechazado
+        boolean accepted = determineIfAccepted(project);
     
-        // Llamar a getNextState pasando el estado antiguo y el valor de aceptado
         String newState = getNextState(oldState, accepted);
         project.setState(newState);
     
-        // Guardar el proyecto
         Project savedProject = projectRepository.save(project);
     
-        // Si hay un cambio real en el estado, manejar la transición
         if (newState != null && !newState.equals(oldState)) {
             handleStateTransition(oldState, newState, savedProject);
         }
@@ -112,9 +108,29 @@ public class ProjectService {
                 .orElseThrow(() -> new RuntimeException("No user with role ADMINISTRATOR found"));
 
         AppUser applicant = project.getApplicantId();
+        Optional<AppUser> promoter = userRepository.findByUsername(project.getPromoterId());
 
-        // Handle logic for each state transition
         switch (newState) {
+            case "esperando aval":
+
+
+                if (promoter.isPresent() && !"esperando aval".equals(oldState)) {
+                    AppUser promoterUser = promoter.get();
+                    String subject = "Nuevo proyecto para avalar";
+                    String body = String.format(
+                            "Hola %s,\n\n" +
+                                    "El usuario %s ha presentado un proyecto titulado '%s'.\n" +
+                                    "El usuario ha requerido tu aval para el proyecto.\n\n" +
+                                    "Saludos,\nTu aplicación",
+                            promoterUser.getUsername(),
+                            (applicant != null ? applicant.getUsername() : "solicitante"),
+                            project.getTitle());
+                    emailService.sendEmail(promoterUser.getEmail(), subject, body);
+                } else if (promoter.isEmpty()) {
+                    System.err.println("No se encontró el promotor");
+                }
+                break;
+
             case "presentado":
                 // Notify CIO if the state changes to "presentado"
                 if (!"presentado".equals(oldState)) {
@@ -128,6 +144,18 @@ public class ProjectService {
                             (applicant != null ? applicant.getUsername() : "desconocido"),
                             project.getTitle());
                     emailService.sendEmail(cioUser.getEmail(), subject, body);
+
+                    if (applicant != null && applicant.getEmail() != null) {
+                        String subjectUser = "Estado de tu proyecto: PRESENTADO";
+                        String bodyUser = String.format(
+                                "Hola %s,\n\n" +
+                                        "Tu proyecto '%s' ha sido avalado por '%s'. Tu proceso pasa a ser evaluado por el CIO.\n\n" +
+                                        "Saludos,\nTu aplicación",
+                                applicant.getUsername(),
+                                project.getTitle(),
+                                promoter.isPresent() ? promoter.get().getUsername() : "tu promotor seleccionado");
+                        emailService.sendEmail(applicant.getEmail(), subjectUser, bodyUser);
+                    }
                 }
                 break;
 
@@ -236,9 +264,11 @@ public class ProjectService {
      */
     public String getNextState(String oldState, boolean accepted) {
         if (oldState == null || oldState.isEmpty()) {
-            return "presentado";  // El primer estado es "presentado"
+            return "esperando aval";  // El primer estado es "esperando aval"
         }
         switch (oldState) {
+            case "esperando aval":
+                return "presentado";
             case "presentado":
                 return "alineado";  // De "presentado" a "alineado"
             case "alineado":
@@ -267,7 +297,6 @@ public class ProjectService {
     public void deleteProject(Long projectId) {
         projectRepository.deleteById(projectId);
     }
-
 
     /**
      * Retrieves projects associated with a specific user ID.

@@ -40,6 +40,17 @@ public class Project {
     private AppUser applicantId;
 
     /**
+     * The call associated with this project.
+     * This represents a many-to-one relationship where multiple projects 
+     * can belong to a single call.
+     * - The `call_id` column stores the foreign key linking to the `Call` table.
+     * - Mapped in the `Call` entity with the `projects` property.
+     */
+    @ManyToOne
+    @JoinColumn(name = "call_id")
+    private Calls call;
+
+    /**
      * The promoter ID associated with the project.
      * This field is optional and may be null.
      */

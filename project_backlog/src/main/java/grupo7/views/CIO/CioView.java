@@ -227,8 +227,6 @@ private void showProjectDetailsDialog(Project project) {
         technicianProject.getHumanResources()));
     detailsLayout.add(new Paragraph(getTranslation("projectAppraisal") + ": " +
         (technicianProject.getProjectAppraisal() != null ? technicianProject.getProjectAppraisal().toString() : getTranslation("notAvailable"))));
-    detailsLayout.add(new Paragraph(getTranslation("technicalResources") + ": " +
-        (technicianProject.getTechnicalResources() != null ? technicianProject.getTechnicalResources() : getTranslation("notAvailable"))));
 
 
     Button acceptButton = new Button(getTranslation("accept"), event -> {
