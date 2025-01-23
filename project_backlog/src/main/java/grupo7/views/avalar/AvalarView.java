@@ -184,7 +184,7 @@ public class AvalarView extends VerticalLayout {
     }
 
     /**
-     * Refreshes the project grid by fetching and displaying only the projects with the state "alineado".
+     * Refreshes the project grid by fetching and displaying only the projects with the state "esperando aval".
      */
     private void refreshGrid() {
         List<Project> alignedProjects = projectService.getAllProjects().stream()

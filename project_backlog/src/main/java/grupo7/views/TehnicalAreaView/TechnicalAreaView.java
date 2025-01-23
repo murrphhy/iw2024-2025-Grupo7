@@ -5,6 +5,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -152,7 +153,7 @@ public class TechnicalAreaView extends VerticalLayout {
     private void openRatingDialog(Project project) {
         Dialog dialog = new Dialog();
         dialog.setWidth("65%");
-        dialog.setHeight("75%");
+        dialog.setHeight("100%");
 
         // Layout principal del diálogo
         VerticalLayout dialogLayout = new VerticalLayout();
@@ -222,7 +223,9 @@ public class TechnicalAreaView extends VerticalLayout {
         // Agregar los campos de recursos financieros al layout
         controlsLayout.add(financialResourcesField, financialResourcesCommentField);
 
-
+        // Crear un layout horizontal para los botones
+        HorizontalLayout buttonsLayout = new HorizontalLayout();
+        buttonsLayout.setSpacing(true); // Agregar espacio entre los botones
 
         // Botón para guardar
         Button saveButton = new Button(getTranslation("button.save"), event -> {
@@ -267,8 +270,11 @@ public class TechnicalAreaView extends VerticalLayout {
 
         Button cancelButton = new Button(getTranslation("cancel"), event -> dialog.close());
 
-        // Añadir botones a los controles
-        controlsLayout.add(saveButton, cancelButton);
+        // Añadir botones al layout horizontal
+        buttonsLayout.add(saveButton, cancelButton);
+
+        // Añadir el layout de botones al controlsLayout
+        controlsLayout.add(buttonsLayout);
 
         // Añadir secciones al cuadro de diálogo
         dialogLayout.addAndExpand(projectInfoLayout);

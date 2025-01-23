@@ -35,6 +35,7 @@ import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayInputStream;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -87,7 +88,7 @@ public class CioView extends VerticalLayout {
 
         setSizeFull();
         add(createProjectGrids());
-        refreshGrid();
+        refreshGrid1();
     }
 
     /**
@@ -173,6 +174,7 @@ private void acceptProject(Project project) {
     // Cambiar el estado del proyecto a "aceptado"
     project.setState(projectService.getNextState(project.getState(), true));  // true significa que el proyecto ha sido aceptado
     projectService.saveProject(project);
+    refreshGrid2();
     Notification.show(getTranslation("projectAccepted") + ": " + project.getShortTitle());
 }
 
@@ -222,11 +224,18 @@ private void showProjectDetailsDialog(Project project) {
     technicianProject = maybeProject.get();
 
     detailsLayout.add(new Paragraph(getTranslation("financialResources") + ": " +
-        (technicianProject.getFinancialResources() != null ? technicianProject.getFinancialResources().toString() : getTranslation("notAvailable"))));
+            (technicianProject.getFinancialResources().compareTo(BigDecimal.ZERO) != 0 ? technicianProject.getFinancialResources() : getTranslation("notAvailable"))));
+    detailsLayout.add(new Paragraph(getTranslation("Comentarios a tener en cuenta de los recursos financieros") + ": " +
+            (technicianProject.getFinancialResourcesComment() != null ? technicianProject.getFinancialResourcesComment() : getTranslation("notAvailable"))));
+
     detailsLayout.add(new Paragraph(getTranslation("humanResources") + ": " +
-        technicianProject.getHumanResources()));
+            (technicianProject.getHumanResources() != 0 ? technicianProject.getHumanResources() : getTranslation("notAvailable"))));
+    detailsLayout.add(new Paragraph(getTranslation("Comentarios a tener en cuenta de los recursos humanos") + ": " +
+            (technicianProject.getHumanResourcesComment() != null ? technicianProject.getHumanResourcesComment() : getTranslation("notAvailable"))));
+
     detailsLayout.add(new Paragraph(getTranslation("projectAppraisal") + ": " +
-        (technicianProject.getProjectAppraisal() != null ? technicianProject.getProjectAppraisal().toString() : getTranslation("notAvailable"))));
+            (technicianProject.getProjectAppraisal() != null ? technicianProject.getProjectAppraisal().toString() : getTranslation("notAvailable"))));
+
 
 
     Button acceptButton = new Button(getTranslation("accept"), event -> {
@@ -248,23 +257,18 @@ private void showProjectDetailsDialog(Project project) {
 }
 
 
-/**
- * Refreshes the data in the grids after changes.
- */
-private void refreshGrids() {
-    // Refrescar ambos grids
-    projectGrid.setItems(projectService.getAllProjects().stream()
-        .filter(project -> "Presentado".equalsIgnoreCase(project.getState()))
-        .collect(Collectors.toList()));
-    projectGrid.getDataProvider().refreshAll();
-
-    evaluatedProjectsGrid.setItems(projectService.getAllProjects().stream()
-        .filter(project -> "Evaluado".equalsIgnoreCase(project.getState()))
-        .collect(Collectors.toList()));
-    evaluatedProjectsGrid.getDataProvider().refreshAll();
-}
 
 
+
+    /**
+     * Refreshes the project grid by fetching and displaying only the projects with the state "evaluado".
+     */
+    private void refreshGrid2() {
+        List<Project> alignedProjects = projectService.getAllProjects().stream()
+                .filter(project -> "evaluado".equalsIgnoreCase(project.getState()))
+                .collect(Collectors.toList());
+        projectGrid.setItems(alignedProjects);
+    }
 
 /**
  * Edits the selected project by binding it to the form fields.
@@ -457,7 +461,7 @@ private void refreshGrids() {
 
                 projectService.saveProject(project);
 
-                refreshGrid();
+                refreshGrid1();
                 dialog.close();
             } else {
                 Notification.show(getTranslation("notification.missingStrategicAlignment"), 3000, Notification.Position.MIDDLE)
@@ -477,7 +481,7 @@ private void refreshGrids() {
     /**
      * Refreshes the project grid by fetching and displaying only the projects with the state "presentado".
      */
-    private void refreshGrid() {
+    private void refreshGrid1() {
         List<Project> presentedProjects = projectService.getAllProjects().stream()
                 .filter(project -> "Presentado".equalsIgnoreCase(project.getState()))
                 .collect(Collectors.toList());
