@@ -3,12 +3,12 @@ package grupo7.models;
 import grupo7.models.keys.TechnicianProjectId;
 
 import jakarta.persistence.*;
-
 import java.math.BigDecimal;
 
 /**
  * Represents the relationship between a technician (user) and a project.
- * This entity includes information about the technician's appraisal of the project.
+ * This entity includes information about the technician's appraisal of the project, including the evaluation of human resources, financial resources,
+ * and their respective comments.
  */
 @Entity
 @Table(name = "technician_project")
@@ -52,11 +52,16 @@ public class TechnicianProject {
     private BigDecimal financialResources;
 
     /**
-     * Description of the technical resources required for the project.
-     * Could include hardware, software, or specialized tools.
+     * Comment for the estimated human resources. This field is optional.
      */
-    @Column(nullable = false)
-    private String technicalResources;
+    @Column(nullable = true)
+    private String humanResourcesComment;
+
+    /**
+     * Comment for the estimated financial resources. This field is optional.
+     */
+    @Column(nullable = true)
+    private String financialResourcesComment;
 
     /**
      * Default constructor required by JPA.
@@ -72,15 +77,15 @@ public class TechnicianProject {
      * @param projectAppraisal   the appraisal value given by the technician
      * @param humanResources     the estimated human resources required
      * @param financialResources the estimated financial resources required
-     * @param technicalResources the description of technical resources required
      */
-    public TechnicianProject(Long user_id, Long project_id, Double projectAppraisal, int humanResources, BigDecimal financialResources, String technicalResources) {
+    public TechnicianProject(Long user_id, Long project_id, Double projectAppraisal, int humanResources, BigDecimal financialResources, String humanResourcesComment, String financialResourcesComment) {
         this.user_id = user_id;
         this.project_id = project_id;
         this.projectAppraisal = projectAppraisal;
         this.humanResources = humanResources;
         this.financialResources = financialResources;
-        this.technicalResources = technicalResources;
+        this.humanResourcesComment = humanResourcesComment;
+        this.financialResourcesComment = financialResourcesComment;
     }
 
     /**
@@ -174,20 +179,38 @@ public class TechnicianProject {
     }
 
     /**
-     * Gets the description of technical resources required for the project.
+     * Gets the comment for the estimated human resources. This field is optional.
      *
-     * @return the technical resources description
+     * @return the comment for human resources
      */
-    public String getTechnicalResources() {
-        return technicalResources;
+    public String getHumanResourcesComment() {
+        return humanResourcesComment;
     }
 
     /**
-     * Sets the description of technical resources required for the project.
+     * Sets the comment for the estimated human resources.
      *
-     * @param technicalResources the new technical resources description
+     * @param humanResourcesComment the new comment for human resources
      */
-    public void setTechnicalResources(String technicalResources) {
-        this.technicalResources = technicalResources;
+    public void setHumanResourcesComment(String humanResourcesComment) {
+        this.humanResourcesComment = humanResourcesComment;
+    }
+
+    /**
+     * Gets the comment for the estimated financial resources. This field is optional.
+     *
+     * @return the comment for financial resources
+     */
+    public String getFinancialResourcesComment() {
+        return financialResourcesComment;
+    }
+
+    /**
+     * Sets the comment for the estimated financial resources.
+     *
+     * @param financialResourcesComment the new comment for financial resources
+     */
+    public void setFinancialResourcesComment(String financialResourcesComment) {
+        this.financialResourcesComment = financialResourcesComment;
     }
 }
