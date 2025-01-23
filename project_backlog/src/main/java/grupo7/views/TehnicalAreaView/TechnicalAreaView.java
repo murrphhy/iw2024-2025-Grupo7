@@ -250,12 +250,11 @@ public class TechnicalAreaView extends VerticalLayout {
                 // Mostrar notificación con los comentarios
                 Notification.show(
                         getTranslation("notification.savedEvaluation1") + rating + ", " +
-                                getTranslation("notification.savedEvaluation2") + humanResources + ", " +
-                                getTranslation("notification.savedEvaluation3") + financialResources + ", " +
-                                getTranslation("notification.savedEvaluation4") + "\n" +
-                                getTranslation("notification.commentHumanResources") + humanResourcesComment + "\n" +
-                                getTranslation("notification.commentFinancialResources") + financialResourcesComment
+                                getTranslation("notification.savedEvaluation2") + humanResources + ", "+ " (" + humanResourcesComment + ") " +
+                                getTranslation("notification.savedEvaluation3") + financialResources + ", "  + " ("+ financialResourcesComment + ") " +
+                                getTranslation("notification.savedEvaluation4") + "\n"
                 );
+
 
                 dialog.close();
                 loadProjects(); // Recargar proyectos
