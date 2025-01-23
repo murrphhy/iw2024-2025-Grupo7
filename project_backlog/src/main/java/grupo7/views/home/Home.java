@@ -92,7 +92,7 @@ public class Home extends VerticalLayout {
                 project.getApplicantId() != null
                         ? project.getApplicantId().getUsername()
                         : getTranslation("promoter")
-        ).setHeader(getTranslation("notAvailable"));
+        ).setHeader(getTranslation("applicant"));
 
         projectGrid.addColumn(Project::getPromoterId).setHeader(getTranslation("promoter"));
 
