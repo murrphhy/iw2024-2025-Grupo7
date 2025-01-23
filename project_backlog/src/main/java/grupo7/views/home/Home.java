@@ -44,7 +44,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @PageTitle("Home")
-@Route("")
+@Route("home")
 @Menu(order = 1)
 @AnonymousAllowed
 public class Home extends VerticalLayout {
