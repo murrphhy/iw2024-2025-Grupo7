@@ -137,6 +137,8 @@ public class AvalarView extends VerticalLayout {
         projectGrid.getDataProvider().refreshItem(project);
         Notification.show("Proyecto avalado correctamente.", 3000, Notification.Position.BOTTOM_START)
                 .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+
+        refreshGrid();
     }
 
 
@@ -179,5 +181,15 @@ public class AvalarView extends VerticalLayout {
         Anchor downloadLink = new Anchor(resource, "Descargar " + label);
         downloadLink.getElement().setAttribute("download", true);
         return downloadLink;
+    }
+
+    /**
+     * Refreshes the project grid by fetching and displaying only the projects with the state "alineado".
+     */
+    private void refreshGrid() {
+        List<Project> alignedProjects = projectService.getAllProjects().stream()
+                .filter(project -> "esperando aval".equalsIgnoreCase(project.getState()))
+                .collect(Collectors.toList());
+        projectGrid.setItems(alignedProjects);
     }
 }
