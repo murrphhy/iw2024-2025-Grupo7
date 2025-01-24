@@ -1,14 +1,17 @@
 package grupo7.services;
 
 import grupo7.models.AppUser;
+import grupo7.models.Calls;
 import grupo7.models.Project;
 import grupo7.models.Role;
+import grupo7.repositories.CallRepository;
 import grupo7.repositories.ProjectRepository;
 import grupo7.repositories.UserRepository;
 import grupo7.repositories.TechnicianProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,6 +29,9 @@ public class ProjectService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private CallRepository callsRepository;
 
     @Autowired
     private EmailService emailService;
@@ -73,28 +79,50 @@ public class ProjectService {
      * @return the saved project.
      */
     public Project saveProject(Project project) {
+        if (project.getStartDate() == null) {
+            throw new IllegalArgumentException("El proyecto debe tener una fecha de inicio");
+        }
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(project.getStartDate());
+        int year = cal.get(Calendar.YEAR);
+
+        String callName = String.valueOf(year);
+        Optional<Calls> existingCallOpt = callsRepository.findByName(callName);
+
+        Calls callForYear;
+        if (existingCallOpt.isPresent()) {
+            callForYear = existingCallOpt.get();
+        } else {
+            callForYear = new Calls(
+                    callName,
+                    0.0,
+                    "open",
+                    "Convocatoria " + year
+            );
+            callsRepository.save(callForYear);
+        }
+
+        project.setCall(callForYear);
+
         AtomicReference<String> oldStateRef = new AtomicReference<>(null);
         if (project.getId() != null) {
             projectRepository.findById(project.getId())
                     .ifPresent(existing -> oldStateRef.set(existing.getState()));
         }
         String oldState = oldStateRef.get();
-    
-        // Asumiendo que 'accepted' es un valor conocido en este contexto
-        boolean accepted = determineIfAccepted(project); // Lógica para determinar si el proyecto fue aceptado o rechazado
-    
-        // Llamar a getNextState pasando el estado antiguo y el valor de aceptado
+
+        boolean accepted = determineIfAccepted(project);
+
         String newState = getNextState(oldState, accepted);
         project.setState(newState);
-    
-        // Guardar el proyecto
+
         Project savedProject = projectRepository.save(project);
-    
-        // Si hay un cambio real en el estado, manejar la transición
+
         if (newState != null && !newState.equals(oldState)) {
             handleStateTransition(oldState, newState, savedProject);
         }
-    
+
         return savedProject;
     }
 
@@ -112,9 +140,29 @@ public class ProjectService {
                 .orElseThrow(() -> new RuntimeException("No user with role ADMINISTRATOR found"));
 
         AppUser applicant = project.getApplicantId();
+        Optional<AppUser> promoter = userRepository.findByUsername(project.getPromoterId());
 
-        // Handle logic for each state transition
         switch (newState) {
+            case "esperando aval":
+
+
+                if (promoter.isPresent() && !"esperando aval".equals(oldState)) {
+                    AppUser promoterUser = promoter.get();
+                    String subject = "Nuevo proyecto para avalar";
+                    String body = String.format(
+                            "Hola %s,\n\n" +
+                                    "El usuario %s ha presentado un proyecto titulado '%s'.\n" +
+                                    "El usuario ha requerido tu aval para el proyecto.\n\n" +
+                                    "Saludos,\nTu aplicación",
+                            promoterUser.getUsername(),
+                            (applicant != null ? applicant.getUsername() : "solicitante"),
+                            project.getTitle());
+                    emailService.sendEmail(promoterUser.getEmail(), subject, body);
+                } else if (promoter.isEmpty()) {
+                    System.err.println("No se encontró el promotor");
+                }
+                break;
+
             case "presentado":
                 // Notify CIO if the state changes to "presentado"
                 if (!"presentado".equals(oldState)) {
@@ -128,6 +176,18 @@ public class ProjectService {
                             (applicant != null ? applicant.getUsername() : "desconocido"),
                             project.getTitle());
                     emailService.sendEmail(cioUser.getEmail(), subject, body);
+
+                    if (applicant != null && applicant.getEmail() != null) {
+                        String subjectUser = "Estado de tu proyecto: PRESENTADO";
+                        String bodyUser = String.format(
+                                "Hola %s,\n\n" +
+                                        "Tu proyecto '%s' ha sido avalado por '%s'. Tu proceso pasa a ser evaluado por el CIO.\n\n" +
+                                        "Saludos,\nTu aplicación",
+                                applicant.getUsername(),
+                                project.getTitle(),
+                                promoter.isPresent() ? promoter.get().getUsername() : "tu promotor seleccionado");
+                        emailService.sendEmail(applicant.getEmail(), subjectUser, bodyUser);
+                    }
                 }
                 break;
 
@@ -226,7 +286,7 @@ public class ProjectService {
                         String subject = "Tu proyecto ha sido rechazado";
                         String body = String.format(
                                 "Hola %s,\n\n" +
-                                        "Lamentablemente, tu proyecto '%s' ha sido rechazado por el CIO.\n\n" +
+                                        "Lamentablemente, tu proyecto '%s' ha sido rechazado.\n\n" +
                                         "Saludos,\nTu aplicación",
                                 applicant.getUsername(),
                                 project.getTitle());
@@ -253,9 +313,11 @@ public class ProjectService {
      */
     public String getNextState(String oldState, boolean accepted) {
         if (oldState == null || oldState.isEmpty()) {
-            return "presentado";  // El primer estado es "presentado"
+            return "esperando aval";  // El primer estado es "esperando aval"
         }
         switch (oldState) {
+            case "esperando aval":
+                return "presentado";
             case "presentado":
                 return "alineado";  // De "presentado" a "alineado"
             case "alineado":

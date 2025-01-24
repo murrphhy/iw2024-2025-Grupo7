@@ -25,7 +25,6 @@ import grupo7.security.AuthenticatedUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 
-
 import com.vaadin.flow.i18n.I18NProvider;
 
 import java.util.HashMap;
@@ -66,7 +65,7 @@ public class MainLayout extends AppLayout {
 
         ComboBox<Locale> languageSelector = createLanguageSelector(i18nProvider);
 
-         // Añadir elementos al encabezado
+        // Añadir elementos al encabezado
         HorizontalLayout headerLayout = new HorizontalLayout(toggle, viewTitle, languageSelector);
         headerLayout.setAlignItems(Alignment.CENTER);
         headerLayout.setWidthFull();
@@ -79,7 +78,6 @@ public class MainLayout extends AppLayout {
         ComboBox<Locale> languageSelector = new ComboBox<>();
         languageSelector.setWidth("150px");
 
-        // Mapear etiquetas personalizadas
         Map<Locale, String> languageLabels = new HashMap<>();
         languageLabels.put(Locale.forLanguageTag("es"), "Español");
         languageLabels.put(Locale.forLanguageTag("en"), "English");
@@ -88,13 +86,12 @@ public class MainLayout extends AppLayout {
         languageSelector.setItems(i18nProvider.getProvidedLocales());
         languageSelector.setItemLabelGenerator(locale -> languageLabels.getOrDefault(locale, locale.getDisplayLanguage()));
 
-        // Listener para cambiar idioma y recargar página
         languageSelector.addValueChangeListener(event -> {
             if (event.getValue() != null && !event.getValue().equals(UI.getCurrent().getSession().getLocale())) {
                 UI.getCurrent().getSession().setLocale(event.getValue());
                 UI.getCurrent().getPage().reload(); // Recargar la página para aplicar el idioma
             }
-        });        
+        });
 
         // Establecer el idioma actual como seleccionado
         languageSelector.setValue(UI.getCurrent().getSession().getLocale());
@@ -130,6 +127,12 @@ public class MainLayout extends AppLayout {
     private Footer createFooter() {
         Footer layout = new Footer();
         layout.add(logoutButton);
+
+        // Botón de registro si no está autenticado
+        if (!logoutButton.getText().equals("Cerrar Sesión")) {
+            Button registerButton = new Button("Registro", click -> UI.getCurrent().navigate("register"));
+            layout.add(registerButton);
+        }
 
         layout.getStyle().set("margin-top", "auto");
         layout.getStyle().set("margin-left", "auto");
