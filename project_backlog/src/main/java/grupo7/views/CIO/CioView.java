@@ -34,6 +34,7 @@ import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayInputStream;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -224,13 +225,17 @@ public class CioView extends VerticalLayout {
         technicianProject = maybeProject.get();
 
         detailsLayout.add(new Paragraph(getTranslation("financialResources") + ": " +
-                (technicianProject.getFinancialResources() != null
-                        ? technicianProject.getFinancialResources().toString() : getTranslation("notAvailable"))));
+                (technicianProject.getFinancialResources().compareTo(BigDecimal.ZERO) != 0 ? technicianProject.getFinancialResources() : getTranslation("notAvailable"))));
+        detailsLayout.add(new Paragraph(getTranslation("Comentarios a tener en cuenta de los recursos financieros") + ": " +
+                (technicianProject.getFinancialResourcesComment() != null ? technicianProject.getFinancialResourcesComment() : getTranslation("notAvailable"))));
+
         detailsLayout.add(new Paragraph(getTranslation("humanResources") + ": " +
-                technicianProject.getHumanResources()));
+                (technicianProject.getHumanResources() != 0 ? technicianProject.getHumanResources() : getTranslation("notAvailable"))));
+        detailsLayout.add(new Paragraph(getTranslation("Comentarios a tener en cuenta de los recursos humanos") + ": " +
+                (technicianProject.getHumanResourcesComment() != null ? technicianProject.getHumanResourcesComment() : getTranslation("notAvailable"))));
+
         detailsLayout.add(new Paragraph(getTranslation("projectAppraisal") + ": " +
-                (technicianProject.getProjectAppraisal() != null
-                        ? technicianProject.getProjectAppraisal().toString() : getTranslation("notAvailable"))));
+                (technicianProject.getProjectAppraisal() != null ? technicianProject.getProjectAppraisal().toString() : getTranslation("notAvailable"))));
 
         Button acceptButton = new Button(getTranslation("accept"), event -> {
             acceptProject(project);
