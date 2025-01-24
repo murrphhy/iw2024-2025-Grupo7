@@ -63,7 +63,6 @@ public class CioView extends VerticalLayout {
 
     private final Binder<Project> binder = new Binder<>(Project.class);
 
-    // Seis campos de evaluación (0 a 10) para calcular la media
     private final NumberField contribucionField = new NumberField(getTranslation("Contribución Estratégica"));
     private final NumberField valorEstudiantesField = new NumberField(getTranslation("Valor para el estudiantado"));
     private final NumberField viabilidadField = new NumberField(getTranslation("Viabilidad financiera "));
@@ -114,12 +113,10 @@ public class CioView extends VerticalLayout {
      * @return the configured {@code VerticalLayout} component
      */
     private VerticalLayout createProjectGrids() {
-        // Filtrar proyectos en estado "Presentado"
         List<Project> presentedProjects = projectService.getAllProjects().stream()
                 .filter(project -> "Presentado".equalsIgnoreCase(project.getState()))
                 .collect(Collectors.toList());
 
-        // Configurar el Grid principal
         projectGrid.removeAllColumns();
         projectGrid.addColumn(project -> project.getApplicantId() != null
                         ? project.getApplicantId().getUsername() : getTranslation("notAvailable"))
@@ -140,7 +137,6 @@ public class CioView extends VerticalLayout {
         projectGrid.addItemDoubleClickListener(event -> openProjectDetailsDialog(event.getItem()));
         projectGrid.setItems(presentedProjects);
 
-        // Filtrar y configurar el segundo Grid (Proyectos Evaluados)
         evaluatedProjectsGrid = new Grid<>(Project.class, false);
         List<Project> evaluatedProjects = projectService.getAllProjects().stream()
                 .filter(project -> "Evaluado".equalsIgnoreCase(project.getState()))
@@ -161,11 +157,9 @@ public class CioView extends VerticalLayout {
                 .setHeader(getTranslation("date"))
                 .setSortable(true);
 
-        // Abrir un dialogo al hacer doble clic
         evaluatedProjectsGrid.addItemDoubleClickListener(event -> showProjectDetailsDialog(event.getItem()));
         evaluatedProjectsGrid.setItems(evaluatedProjects);
 
-        // Organizar los Grids en un layout
         VerticalLayout layout = new VerticalLayout();
         layout.add(new H3(getTranslation("presentedProjects")), projectGrid);
         layout.add(new H3(getTranslation("evaluatedProjects")), evaluatedProjectsGrid);
@@ -179,7 +173,6 @@ public class CioView extends VerticalLayout {
      * @param project the project to accept
      */
     private void acceptProject(Project project) {
-        // Cambiar el estado del proyecto a "aceptado"
         project.setState(projectService.getNextState(project.getState(), true));
         projectService.saveProject(project);
         Notification.show(getTranslation("projectAccepted") + ": " + project.getShortTitle());
@@ -191,7 +184,6 @@ public class CioView extends VerticalLayout {
      * @param project the project to reject
      */
     private void rejectProject(Project project) {
-        // Cambiar el estado del proyecto a "no aceptado"
         project.setState(projectService.getNextState(project.getState(), false));
         projectService.saveProject(project);
         Notification.show(getTranslation("projectRejected") + ": " + project.getShortTitle());
@@ -263,7 +255,6 @@ public class CioView extends VerticalLayout {
      * Refreshes the data in the grids after changes.
      */
     private void refreshGrids() {
-        // Refrescar ambos grids
         projectGrid.setItems(projectService.getAllProjects().stream()
                 .filter(project -> "Presentado".equalsIgnoreCase(project.getState()))
                 .collect(Collectors.toList()));
@@ -309,7 +300,6 @@ public class CioView extends VerticalLayout {
         dialogLayout.setSpacing(false);
         dialogLayout.getStyle().set("text-align", "center");
 
-        // Contenedor con scroll
         VerticalLayout scrollableContent = new VerticalLayout();
         scrollableContent.setSizeFull();
         scrollableContent.setSpacing(false);
@@ -360,7 +350,6 @@ public class CioView extends VerticalLayout {
 
         dialogLayout.add(scrollableContent);
 
-        // Añadimos el formulario de evaluación
         VerticalLayout evaluationForm = createEvaluationForm(project, dialog);
         dialogLayout.add(evaluationForm);
 
@@ -404,16 +393,13 @@ public class CioView extends VerticalLayout {
      * @return the configured {@code VerticalLayout} containing the evaluation form
      */
     private VerticalLayout createEvaluationForm(Project project, Dialog dialog) {
-        // Configurar campos (rango 0..10, step, width)
         configureEvaluationFields();
 
-        // Botones Guardar / Cerrar
         Button saveButton = new Button(getTranslation("button.save"), e -> {
             savePrioritization(project, dialog);
         });
         Button closeButton = new Button(getTranslation("button.close"), e -> dialog.close());
 
-        // Agrupar campos en 2 filas
         HorizontalLayout row1 = new HorizontalLayout(contribucionField, valorEstudiantesField, viabilidadField);
         HorizontalLayout row2 = new HorizontalLayout(riesgosField, innovacionField, factibilidadField);
 
@@ -448,16 +434,13 @@ public class CioView extends VerticalLayout {
             double c6 = safeValue(factibilidadField.getValue());
 
             double average = (c1 + c2 + c3 + c4 + c5 + c6) / 6.0;
-            // Guardar la media en strategicAlignment
             project.setStrategicAlignment(average);
-            // Cambiar estado si se desea
             project.setState("Puntuado");
 
-            // Enviar email
             AppUser applicant = project.getApplicantId();
             if (applicant != null) {
                 String email = applicant.getEmail();
-                String subject = getTranslation("email.subject"); // Ajusta la traducción
+                String subject = getTranslation("email.subject");
                 String message = String.format(
                         getTranslation("email.message"),
                         applicant.getUsername(),
@@ -476,7 +459,6 @@ public class CioView extends VerticalLayout {
                 }
             }
 
-            // Guardar cambios
             projectService.saveProject(project);
 
             refreshGrid();
@@ -497,7 +479,6 @@ public class CioView extends VerticalLayout {
      */
     private void clearForm() {
         binder.setBean(null);
-        // Se limpian los campos de evaluación si corresponde
         contribucionField.clear();
         valorEstudiantesField.clear();
         viabilidadField.clear();
@@ -538,7 +519,6 @@ public class CioView extends VerticalLayout {
                 .set("text-align", "left");
 
         if (fileContent != null && fileContent.length > 0) {
-            // Create a stream resource for the file
             StreamResource resource = new StreamResource(
                     fileName,
                     () -> new ByteArrayInputStream(fileContent)
