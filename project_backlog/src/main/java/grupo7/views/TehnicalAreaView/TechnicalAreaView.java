@@ -152,7 +152,7 @@ public class TechnicalAreaView extends VerticalLayout {
     private void openRatingDialog(Project project) {
         Dialog dialog = new Dialog();
         dialog.setWidth("65%");
-        dialog.setHeight("75%");
+        dialog.setHeight("100%");
 
         // Layout principal del diálogo
         VerticalLayout dialogLayout = new VerticalLayout();
