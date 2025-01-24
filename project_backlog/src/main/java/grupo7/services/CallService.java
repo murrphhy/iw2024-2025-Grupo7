@@ -2,6 +2,7 @@ package grupo7.services;
 
 import grupo7.models.Calls;
 import grupo7.repositories.CallRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,9 +22,10 @@ public class CallService {
         return callRepository.findAll();
     }
 
-    /*public List<Calls> findAll() {
+
+    public List<Calls> findAll() {
         return callRepository.findAllWithProjects();
-    }*/
+    }
 
     // Obtener una convocatoria por ID
     public Optional<Calls> getCallById(Long id) {

@@ -274,7 +274,7 @@ public class ProjectService {
                         String subject = "Tu proyecto ha sido rechazado";
                         String body = String.format(
                                 "Hola %s,\n\n" +
-                                        "Lamentablemente, tu proyecto '%s' ha sido rechazado por el CIO.\n\n" +
+                                        "Lamentablemente, tu proyecto '%s' ha sido rechazado.\n\n" +
                                         "Saludos,\nTu aplicación",
                                 applicant.getUsername(),
                                 project.getTitle());

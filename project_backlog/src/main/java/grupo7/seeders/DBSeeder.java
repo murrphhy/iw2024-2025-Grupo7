@@ -30,7 +30,7 @@ public class DBSeeder {
                 AppUser applicant = new AppUser();
                 applicant.setUsername("applicantUser");
                 applicant.setPassword(passwordEncoder.encode("password"));
-                applicant.setEmail("applicant@uca.es");
+                applicant.setEmail("ticojim262@suggets.com");
                 applicant.setAcademicPosition("Solicitante");
                 applicant.setCenter("Centro de Solicitantes");
                 applicant.setTechnicalArea("Ingeniería");
@@ -42,7 +42,7 @@ public class DBSeeder {
                 AppUser technical = new AppUser();
                 technical.setUsername("technicalUser");
                 technical.setPassword(passwordEncoder.encode("password"));
-                technical.setEmail("technical@uca.es");
+                technical.setEmail("rauffebrigrauje-9137@yopmail.com");
                 technical.setAcademicPosition("Soporte Técnico");
                 technical.setCenter("Centro Técnico");
                 technical.setTechnicalArea("Soporte Informático");
@@ -54,7 +54,7 @@ public class DBSeeder {
                 AppUser cio = new AppUser();
                 cio.setUsername("cioUser");
                 cio.setPassword(passwordEncoder.encode("password"));
-                cio.setEmail("cio@uca.es");
+                cio.setEmail("samfp@freesourcecodes.com");
                 cio.setAcademicPosition("Chief Information Officer");
                 cio.setCenter("Centro de Información");
                 cio.setTechnicalArea("Tecnología de la Información");
