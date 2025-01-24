@@ -1,6 +1,7 @@
 package grupo7.views.TehnicalAreaView;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Paragraph;
@@ -13,9 +14,12 @@ import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
+
+import grupo7.models.Calls;
 import grupo7.models.Project;
 import grupo7.services.ProjectService;
 import grupo7.services.TechnicianProjectService;
+import grupo7.services.CallService;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -37,9 +41,11 @@ import java.util.stream.Collectors;
 @RolesAllowed("TECHNICAL")
 public class TechnicalAreaView extends VerticalLayout {
 
+    private CallService callService;
     private final ProjectService projectService;
     private final TechnicianProjectService technicianProjectService;
     private final Grid<Project> projectGrid;
+        private ComboBox<Calls> callFilterComboBox;
 
     /**
      * Constructor de la vista de área técnica.
@@ -48,21 +54,46 @@ public class TechnicalAreaView extends VerticalLayout {
      * @param technicianProjectService Servicio para gestionar evaluaciones técnicas de proyectos.
      */
     @Autowired
-    public TechnicalAreaView(ProjectService projectService, TechnicianProjectService technicianProjectService) {
+    public TechnicalAreaView(ProjectService projectService, TechnicianProjectService technicianProjectService, CallService callService) {
         this.projectService = projectService;
         this.technicianProjectService = technicianProjectService;
+        this.callService = callService;
+
+        createCallFilterComboBox();
 
         // Inicializar la tabla
         projectGrid = new Grid<>(Project.class, false);
         configureGrid();
 
         // Añadir componentes al diseño principal
-        add(projectGrid);
+        add(callFilterComboBox,projectGrid);
 
         // Cargar datos en la tabla
         loadProjects();
 
         refreshGrid();
+    }
+
+    // Método para crear el ComboBox de convocatorias
+    private void createCallFilterComboBox() {
+        // Crear el ComboBox de convocatorias
+        callFilterComboBox = new ComboBox<>();
+        callFilterComboBox.setLabel(getTranslation("filterByCall"));
+        callFilterComboBox.setItemLabelGenerator(Calls::getName);  // Mostrar el nombre de la convocatoria
+
+        // Llamamos al servicio para cargar las convocatorias
+        callFilterComboBox.setItems(callService.getAllCalls());
+        callFilterComboBox.addValueChangeListener(e -> filterProjectsByCall(e.getValue()));  // Filtrar proyectos por convocatoria seleccionada
+    }
+
+    private void filterProjectsByCall(Calls selectedCall) {
+        if (selectedCall != null) {
+            // Filtrar proyectos por convocatoria seleccionada
+            projectGrid.setItems(projectService.getProjectsByCall(selectedCall.getId()));
+        } else {
+            // Si no se selecciona ninguna convocatoria, mostrar todos los proyectos
+            projectGrid.setItems(projectService.getAllProjects());
+        }
     }
 
     private VerticalLayout createDownloadField(String label, byte[] fileContent, String fileName) {

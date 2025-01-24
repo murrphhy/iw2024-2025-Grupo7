@@ -190,6 +190,15 @@ public class Project {
         this.applicantId = applicantId;
     }
 
+    // Getters and setters
+    public Calls getCall() {
+        return call;
+    }
+
+    public void setCall(Calls call) {
+        this.call = call;
+    }
+
     /**
      * Gets the promoter ID associated with the project.
      *

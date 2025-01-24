@@ -1,14 +1,17 @@
 package grupo7.services;
 
 import grupo7.models.AppUser;
+import grupo7.models.Calls;
 import grupo7.models.Project;
 import grupo7.models.Role;
+import grupo7.repositories.CallRepository;
 import grupo7.repositories.ProjectRepository;
 import grupo7.repositories.UserRepository;
 import grupo7.repositories.TechnicianProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,6 +29,9 @@ public class ProjectService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private CallRepository callsRepository;
 
     @Autowired
     private EmailService emailService;
@@ -61,6 +67,11 @@ public class ProjectService {
         return projectRepository.findByTitle(title);
     }
 
+    public List<Project> getProjectsByCall(Long callId) {
+        return projectRepository.findByCallId(callId);
+    }
+    
+
     public boolean determineIfAccepted(Project project) {
         return "aceptado".equalsIgnoreCase(project.getState());
     }
@@ -73,24 +84,50 @@ public class ProjectService {
      * @return the saved project.
      */
     public Project saveProject(Project project) {
+        if (project.getStartDate() == null) {
+            throw new IllegalArgumentException("El proyecto debe tener una fecha de inicio");
+        }
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(project.getStartDate());
+        int year = cal.get(Calendar.YEAR);
+
+        String callName = String.valueOf(year);
+        Optional<Calls> existingCallOpt = callsRepository.findByName(callName);
+
+        Calls callForYear;
+        if (existingCallOpt.isPresent()) {
+            callForYear = existingCallOpt.get();
+        } else {
+            callForYear = new Calls(
+                    callName,
+                    0.0,
+                    "open",
+                    "Convocatoria " + year
+            );
+            callsRepository.save(callForYear);
+        }
+
+        project.setCall(callForYear);
+
         AtomicReference<String> oldStateRef = new AtomicReference<>(null);
         if (project.getId() != null) {
             projectRepository.findById(project.getId())
                     .ifPresent(existing -> oldStateRef.set(existing.getState()));
         }
         String oldState = oldStateRef.get();
-    
+
         boolean accepted = determineIfAccepted(project);
-    
+
         String newState = getNextState(oldState, accepted);
         project.setState(newState);
-    
+
         Project savedProject = projectRepository.save(project);
-    
+
         if (newState != null && !newState.equals(oldState)) {
             handleStateTransition(oldState, newState, savedProject);
         }
-    
+
         return savedProject;
     }
     

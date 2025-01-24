@@ -2,6 +2,7 @@ package grupo7.views.CIO;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Anchor;
@@ -29,8 +30,10 @@ import grupo7.security.AuthenticatedUser;
 import grupo7.services.TechnicianProjectService;
 import grupo7.repositories.TechnicianProjectRepository;
 import grupo7.models.AppUser;
+import grupo7.models.Calls;
 import grupo7.services.ProjectService;
 import grupo7.services.EmailService;
+import grupo7.services.CallService;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -53,6 +56,7 @@ import java.util.stream.Collectors;
 @Menu(order = 3)
 public class CioView extends VerticalLayout {
 
+    private CallService callService;
     private  AuthenticatedUser authenticatedUser ;
     private  TechnicianProjectId technicianProjectId;
     private  TechnicianProjectService technicianProjectService;
@@ -61,6 +65,7 @@ public class CioView extends VerticalLayout {
     private final EmailService emailService;
     private final Grid<Project> projectGrid = new Grid<>(Project.class);
     private Grid<Project> evaluatedProjectsGrid = new Grid<>(Project.class, false);
+    private ComboBox<Calls> callFilterComboBox;
 
     private final Binder<Project> binder = new Binder<>(Project.class);
 
@@ -76,19 +81,49 @@ public class CioView extends VerticalLayout {
      * @param emailService   the service to handle email notifications
      */
     @Autowired
-    public CioView(ProjectService projectService, EmailService emailService, AuthenticatedUser authenticatedUser, TechnicianProjectService technicianProjectService, TechnicianProjectRepository projectRepository) {
+    public CioView(ProjectService projectService, EmailService emailService, CallService callService, AuthenticatedUser authenticatedUser, TechnicianProjectService technicianProjectService, TechnicianProjectRepository projectRepository) {
         this.projectService = projectService;
         this.emailService = emailService;
+        this.callService = callService;
         this.authenticatedUser = authenticatedUser;
         this.technicianProjectService = technicianProjectService;
+
+        createCallFilterComboBox();
+
+        // Layout para ComboBox y Grid
+        HorizontalLayout contentLayout = new HorizontalLayout(callFilterComboBox, projectGrid);
+        contentLayout.setAlignItems(Alignment.END);
 
         binder.forField(strategicAlignmentField)
                 .bind(Project::getStrategicAlignment, Project::setStrategicAlignment);
 
         setSizeFull();
+        add(contentLayout);
         add(createProjectGrids());
         refreshGrid();
     }
+
+// Método para crear el ComboBox de convocatorias
+private void createCallFilterComboBox() {
+    // Crear el ComboBox de convocatorias
+    callFilterComboBox = new ComboBox<>();
+    callFilterComboBox.setLabel(getTranslation("filterByCall"));
+    callFilterComboBox.setItemLabelGenerator(Calls::getName);  // Mostrar el nombre de la convocatoria
+
+    // Llamamos al servicio para cargar las convocatorias
+    callFilterComboBox.setItems(callService.getAllCalls());
+    callFilterComboBox.addValueChangeListener(e -> filterProjectsByCall(e.getValue()));  // Filtrar proyectos por convocatoria seleccionada
+}
+
+private void filterProjectsByCall(Calls selectedCall) {
+    if (selectedCall != null) {
+        // Filtrar proyectos por convocatoria seleccionada
+        projectGrid.setItems(projectService.getProjectsByCall(selectedCall.getId()));
+    } else {
+        // Si no se selecciona ninguna convocatoria, mostrar todos los proyectos
+        projectGrid.setItems(projectService.getAllProjects());
+    }
+}
 
     /**
  * Creates and configures the layout to display project grids, including
@@ -102,6 +137,16 @@ private VerticalLayout createProjectGrids() {
     List<Project> presentedProjects = projectService.getAllProjects().stream()
         .filter(project -> "Presentado".equalsIgnoreCase(project.getState()))
         .collect(Collectors.toList());
+
+    // Crear el ComboBox de convocatorias
+    callFilterComboBox = new ComboBox<>();
+    callFilterComboBox.setLabel(getTranslation("filterByCall"));
+    callFilterComboBox.setItemLabelGenerator(Calls::getName);  // Mostrar el nombre de la convocatoria
+    callFilterComboBox.setItems(callService.getAllCalls());  // Cargar las convocatorias
+    callFilterComboBox.addValueChangeListener(e -> filterProjectsByCall(e.getValue()));  // Filtrar proyectos según la convocatoria seleccionada
+
+    // Filtrar proyectos según la convocatoria seleccionada
+    filterProjectsByCall(null);  // Inicialmente, mostrar todos los proyectos
     
     // Configurar el Grid
     projectGrid.removeAllColumns();

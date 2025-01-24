@@ -272,10 +272,10 @@ public class AdminPanel extends Div {
         callGrid.addColumn(Calls::getTotalBudget).setHeader(getTranslation("totalbudget"));
 
         callGrid.addComponentColumn(call -> {
-            Button editButton = new Button("Editar", e -> editCall(call));
-            Button deleteButton = new Button("Eliminar", e -> deleteCall(call));
+            Button editButton = new Button(getTranslation("action.edit"), e -> editCall(call));
+            Button deleteButton = new Button(getTranslation("action.delete"), e -> deleteCall(call));
             return new HorizontalLayout(editButton, deleteButton);
-        }).setHeader("Acciones");
+        }).setHeader(getTranslation("actions"));
 
         callGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
     }
@@ -287,7 +287,8 @@ public class AdminPanel extends Div {
 
         TextField nameField = new TextField(getTranslation("name"));
         TextField descriptionField = new TextField(getTranslation("description"));
-        TextField stateField = new TextField(getTranslation("state"));
+        ComboBox<String> stateComboBox = new ComboBox<>(getTranslation("state"));
+        stateComboBox.setItems("Abierta", "Cerrada");
         TextField totalBudgetField = new TextField(getTranslation("totalbudget"));
 
         callBinder.forField(nameField)
@@ -298,7 +299,7 @@ public class AdminPanel extends Div {
                 .asRequired(getTranslation("descriptionRequired"))
                 .bind(Calls::getDescription, Calls::setDescription);
 
-        callBinder.forField(stateField)
+        callBinder.forField(stateComboBox)
                 .asRequired(getTranslation("stateRequired"))
                 .bind(Calls::getState, Calls::setState);
         
@@ -311,7 +312,7 @@ public class AdminPanel extends Div {
 
         Button saveButton = new Button(getTranslation("button.save"), e -> saveCall());
         Button cancelButton = new Button(getTranslation("cancel"), e -> cancelCallEdit());
-        callFormLayout.add(nameField, descriptionField, stateField, totalBudgetField, new HorizontalLayout(saveButton, cancelButton));
+        callFormLayout.add(nameField, descriptionField, stateComboBox, totalBudgetField, new HorizontalLayout(saveButton, cancelButton));
 
         callFormLayout.setVisible(false);
 
