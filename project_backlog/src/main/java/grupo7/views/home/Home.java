@@ -1,8 +1,9 @@
 package grupo7.views.home;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vaadin.flow.component.accordion.Accordion;
+import com.vaadin.flow.component.accordion.AccordionPanel;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -12,8 +13,8 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Paragraph;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -25,10 +26,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import grupo7.models.Project;
 import grupo7.models.AppUser;
+import grupo7.models.Calls;
+import grupo7.models.Project;
 import grupo7.models.Role;
 import grupo7.security.AuthenticatedUser;
+import grupo7.services.CallService;
 import grupo7.services.ProjectService;
 import grupo7.services.PromoterApiResponse;
 import grupo7.services.UserService;
@@ -50,140 +53,165 @@ import java.util.stream.Collectors;
 public class Home extends VerticalLayout {
 
     private final ProjectService projectService;
-    private final Grid<Project> projectGrid;
     private final UserService userService;
+    private final AuthenticatedUser authenticatedUser;
+    private final CallService callsService;
+
+    private final Accordion callsAccordion = new Accordion();
+
+    private final ComboBox<Calls> callFilterComboBox = new ComboBox<>("Filtrar Convocatoria");
+
+    private final ComboBox<AppUser> promoterComboBox = new ComboBox<>("Promotor");
+
+    private static List<AppUser> cachedPromoters = null;
+    private static long cacheTimestamp = 0;
+    private static final long CACHE_DURATION_MS = 5 * 24 * 60 * 60 * 1000L; // 5 días
 
     @Autowired
-    private AuthenticatedUser authenticatedUser;
-
-    // ComboBox de promotores cargado al iniciar
-    private ComboBox<AppUser> promoterComboBox = new ComboBox<>("Promotor");
-
-    @Autowired
-    public Home(ProjectService projectService, AuthenticatedUser authenticatedUser, UserService userService) {
+    public Home(ProjectService projectService,
+                AuthenticatedUser authenticatedUser,
+                UserService userService,
+                CallService callsService) {
         this.projectService = projectService;
         this.authenticatedUser = authenticatedUser;
         this.userService = userService;
-        this.projectGrid = new Grid<>(Project.class, false);
+        this.callsService = callsService;
+
+        setSizeFull();
+        setJustifyContentMode(JustifyContentMode.START);
+        setDefaultHorizontalComponentAlignment(Alignment.START);
+        getStyle().set("text-align", "left");
 
         if (authenticatedUser != null && authenticatedUser.get().isPresent()) {
-            Button addProjectButton = new Button(getTranslation("newProject"), e -> openNewProjectDialog());
+            Button addProjectButton = new Button("Nuevo Proyecto", e -> openNewProjectDialog());
             HorizontalLayout topBar = new HorizontalLayout(addProjectButton);
+            topBar.setWidthFull();
+            topBar.setJustifyContentMode(JustifyContentMode.START);
             add(topBar);
         }
 
-        configureGrid();
-        add(projectGrid);
+        configureCallFilterComboBox();
 
-        setSizeFull();
-        setJustifyContentMode(JustifyContentMode.CENTER);
-        setDefaultHorizontalComponentAlignment(Alignment.CENTER);
-        getStyle().set("text-align", "center");
+        callsAccordion.setWidth("90%");
+        add(callFilterComboBox, callsAccordion);
 
-        // Cargar promotores al iniciar la vista
+        List<Calls> allCalls = callsService.findAll();
+        buildAccordion(allCalls);
+
         loadPromotersOnStartup();
     }
 
-    private void configureGrid() {
-        projectGrid.removeAllColumns(); // Remove any existing columns
+    private void configureCallFilterComboBox() {
+        callFilterComboBox.setItemLabelGenerator(Calls::getName);
+        callFilterComboBox.setPlaceholder("Seleccione una convocatoria...");
 
-        // Configure specific columns
-        projectGrid.addColumn(project ->
-                project.getApplicantId() != null
-                        ? project.getApplicantId().getUsername()
-                        : getTranslation("promoter")
-        ).setHeader(getTranslation("notAvailable"));
+        List<Calls> allCalls = callsService.findAll();
+        callFilterComboBox.setItems(allCalls);
 
-        projectGrid.addColumn(Project::getPromoterId).setHeader(getTranslation("promoter"));
-
-        projectGrid.addColumn(Project::getShortTitle).setHeader(getTranslation("shortTitle"));
-
-        projectGrid.addColumn(Project::getState).setHeader(getTranslation("state"));
-
-        projectGrid.addColumn(project -> {
-            Date d = project.getStartDate();
-            return d != null ? d.toString() : getTranslation("notAvailable");
-        }).setHeader(getTranslation("date")).setTextAlign(ColumnTextAlign.END);
-
-        projectGrid.setItems(projectService.getAllProjects());
-        projectGrid.setWidth("90%");
-        projectGrid.setHeight("400px");
-
-        // Add selection listener to open project details dialog
-        projectGrid.addSelectionListener(event -> event.getFirstSelectedItem().ifPresent(this::openProjectDetailsDialog));
+        callFilterComboBox.addValueChangeListener(event -> {
+            Calls selectedCall = event.getValue();
+            if (selectedCall != null) {
+                buildAccordion(Collections.singletonList(selectedCall));
+            } else {
+                buildAccordion(allCalls);
+            }
+        });
     }
 
-    /**
-     * Metodo para asignar el promoterId al proyecto.
-     * Asigna el promoterId del usuario actual al proyecto y actualiza la cuadrícula.
-     *
-     * @param project El proyecto al que se asignará el promoterId.
-     */
-    private void assignPromoter(Project project) {
-        Optional<AppUser> maybeUser = authenticatedUser.get();
-        if (maybeUser.isPresent()) {
-            AppUser currentUser = maybeUser.get();
-            if (currentUser.getRole() == Role.PROMOTER) {
-                // Asignar el promoterId al username del promotor actual
-                project.setPromoterId(currentUser.getUsername()); // Asegúrate de que promoterId es de tipo String
-                projectService.saveProject(project); // Guardar los cambios
-                Notification.show(getTranslation("assigned"), 3000, Notification.Position.BOTTOM_START);
-                projectGrid.getDataProvider().refreshItem(project); // Actualizar solo el ítem modificado
-            } else {
-                Notification.show(getTranslation("noPermission"), 3000, Notification.Position.MIDDLE)
-                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
-            }
-        } else {
-            Notification.show(getTranslation("no.logged.in"), 3000, Notification.Position.MIDDLE)
-                    .addThemeVariants(NotificationVariant.LUMO_ERROR);
+    private void buildAccordion(List<Calls> callsList) {
+        callsAccordion.getChildren()
+                .collect(Collectors.toList())
+                .forEach(comp -> callsAccordion.remove(comp));
+
+        for (Calls call : callsList) {
+            Grid<Project> callGrid = createCallGrid(call);
+            String panelTitle = "Convocatoria " + call.getName();
+            callsAccordion.add(panelTitle, callGrid);
         }
     }
 
+    private Grid<Project> createCallGrid(Calls call) {
+        Grid<Project> callGrid = new Grid<>(Project.class, false);
+        callGrid.removeAllColumns();
+
+        callGrid.addColumn(project ->
+                project.getApplicantId() != null
+                        ? project.getApplicantId().getUsername()
+                        : "N/A"
+        ).setHeader("Solicitante");
+
+        callGrid.addColumn(Project::getPromoterId).setHeader("Promotor");
+        callGrid.addColumn(Project::getShortTitle).setHeader("Título corto");
+        callGrid.addColumn(Project::getState).setHeader("Estado");
+        callGrid.addColumn(proj -> {
+            Date d = proj.getStartDate();
+            return (d != null) ? d.toString() : "N/A";
+        }).setHeader("Fecha inicio").setTextAlign(ColumnTextAlign.END);
+
+        callGrid.setWidth("90%");
+        callGrid.setHeight("400px");
+
+        callGrid.setItems(call.getProjects());
+
+        callGrid.addSelectionListener(ev ->
+                ev.getFirstSelectedItem().ifPresent(this::openProjectDetailsDialog)
+        );
+
+        return callGrid;
+    }
 
     private void openProjectDetailsDialog(Project project) {
         Dialog dialog = new Dialog();
-        dialog.setHeaderTitle(getTranslation("title"));
-
+        dialog.setHeaderTitle("Detalles del Proyecto");
         dialog.setWidth("60%");
 
         VerticalLayout detailsLayout = new VerticalLayout();
-        detailsLayout.getStyle().set("text-align", "center");
+        detailsLayout.getStyle().set("text-align", "left");
 
-        // Main title
         H2 title = new H2(project.getTitle());
         title.getStyle().set("margin-bottom", "10px");
         detailsLayout.add(title);
 
-        // Styled details
-        detailsLayout.add(createDetailField(getTranslation("shortTitle"), project.getShortTitle()));
-        detailsLayout.add(createDetailField(getTranslation("scope"), project.getScope()));
+        detailsLayout.add(createDetailField("Título corto", project.getShortTitle()));
+        detailsLayout.add(createDetailField("Alcance", project.getScope()));
+
         String promoterDisplay = (project.getPromoterId() != null && !project.getPromoterId().isEmpty())
                 ? project.getPromoterId()
-                : getTranslation("noPromoter");
-        detailsLayout.add(createDetailField(getTranslation("promoter"), promoterDisplay));
-        detailsLayout.add(createDetailField(getTranslation("applicant"),
-                project.getApplicantId() != null ? project.getApplicantId().getUsername() : getTranslation("notAvailable")));
-        detailsLayout.add(createDetailField(getTranslation("state"), project.getState()));
-        detailsLayout.add(createDetailField(getTranslation("startDate"),
-                project.getStartDate() != null ? project.getStartDate().toString() : getTranslation("notAvailable")));
+                : "Sin Promotor";
+        detailsLayout.add(createDetailField("Promotor", promoterDisplay));
 
-        // Download Memory file if exists
-        detailsLayout.add(createDownloadField(getTranslation("memory"), project.getMemory(), project.getShortTitle() + "_memory.pdf"));
+        detailsLayout.add(createDetailField("Solicitante",
+                (project.getApplicantId() != null) ? project.getApplicantId().getUsername() : "N/A"
+        ));
 
-        // Add buttons for Project Regulations and Technical Specifications
+        detailsLayout.add(createDetailField("Estado", project.getState()));
+        detailsLayout.add(createDetailField("Fecha inicio",
+                (project.getStartDate() != null) ? project.getStartDate().toString() : "N/A"
+        ));
+
+        detailsLayout.add(createDownloadField("Memoria", project.getMemory(), project.getShortTitle() + "_memory.pdf"));
+
         if (project.getProjectRegulations() != null && project.getProjectRegulations().length > 0) {
-            detailsLayout.add(createDownloadField(getTranslation("button.download.Regulations"), project.getProjectRegulations(), project.getShortTitle() + "_project_regulations.pdf"));
+            detailsLayout.add(createDownloadField(
+                    "Regulaciones",
+                    project.getProjectRegulations(),
+                    project.getShortTitle() + "_project_regulations.pdf"
+            ));
         } else {
-            detailsLayout.add(createNoFileMessage(getTranslation("project.regulations")));
+            detailsLayout.add(createNoFileMessage("Regulaciones"));
         }
 
         if (project.getTechnicalSpecifications() != null && project.getTechnicalSpecifications().length > 0) {
-            detailsLayout.add(createDownloadField(getTranslation("button.download.Specifications"), project.getTechnicalSpecifications(), project.getShortTitle() + "_technical_specifications.pdf"));
+            detailsLayout.add(createDownloadField(
+                    "Especificaciones Técnicas",
+                    project.getTechnicalSpecifications(),
+                    project.getShortTitle() + "_technical_specifications.pdf"
+            ));
         } else {
-            detailsLayout.add(createNoFileMessage(getTranslation("technical.specifications")));
+            detailsLayout.add(createNoFileMessage("Especificaciones Técnicas"));
         }
 
-        Button closeButton = new Button(getTranslation("button.close"), event -> dialog.close());
+        Button closeButton = new Button("Cerrar", e -> dialog.close());
         HorizontalLayout footer = new HorizontalLayout(closeButton);
         footer.setWidthFull();
         footer.setJustifyContentMode(JustifyContentMode.END);
@@ -192,77 +220,6 @@ public class Home extends VerticalLayout {
         dialog.open();
     }
 
-    /**
-     * Crea un campo estilizado con etiqueta y enlace de descarga o mensaje.
-     *
-     * @param label         La etiqueta del campo.
-     * @param fileContent   El contenido del archivo en bytes.
-     * @param fileName      El nombre del archivo para la descarga.
-     * @return Un VerticalLayout con la etiqueta y el enlace de descarga o mensaje.
-     */
-    private VerticalLayout createDownloadField(String label, byte[] fileContent, String fileName) {
-        VerticalLayout fieldLayout = new VerticalLayout();
-        fieldLayout.setSpacing(false);
-        fieldLayout.setPadding(false);
-
-        Paragraph labelComponent = new Paragraph(label);
-        labelComponent.getStyle()
-                .set("color", "darkgray")
-                .set("font-weight", "bold")
-                .set("margin-bottom", "0")
-                .set("text-align", "left");
-
-        StreamResource resource = new StreamResource(
-                fileName,
-                () -> new ByteArrayInputStream(fileContent)
-        );
-        resource.setContentType("application/pdf"); // Adjust the type according to the file
-
-        Anchor downloadLink = new Anchor(resource, getTranslation("button.download")+ " " + label);
-        downloadLink.getElement().setAttribute("download", true);
-        downloadLink.getStyle().set("margin-top", "5px");
-        downloadLink.getStyle().set("display", "inline-block");
-
-        fieldLayout.add(labelComponent, downloadLink);
-
-        return fieldLayout;
-    }
-
-    /**
-     * Crea un mensaje estilizado indicando que no se ha subido ningún archivo.
-     *
-     * @param label La etiqueta del campo.
-     * @return Un VerticalLayout con la etiqueta y el mensaje de no archivo.
-     */
-    private VerticalLayout createNoFileMessage(String label) {
-        VerticalLayout fieldLayout = new VerticalLayout();
-        fieldLayout.setSpacing(false);
-        fieldLayout.setPadding(false);
-
-        Paragraph labelComponent = new Paragraph(label);
-        labelComponent.getStyle()
-                .set("color", "darkgray")
-                .set("font-weight", "bold")
-                .set("margin-bottom", "0")
-                .set("text-align", "left");
-
-        Paragraph noFileMessage = new Paragraph(getTranslation("no.file.uploaded"));
-        noFileMessage.getStyle()
-                .set("font-size", "16px")
-                .set("font-weight", "normal")
-                .set("margin-top", "5px");
-
-        fieldLayout.add(labelComponent, noFileMessage);
-        return fieldLayout;
-    }
-
-    /**
-     * Crea un campo estilizado con etiqueta y valor.
-     *
-     * @param label La etiqueta del campo.
-     * @param value El valor del campo.
-     * @return Un VerticalLayout con la etiqueta y el valor.
-     */
     private VerticalLayout createDetailField(String label, String value) {
         VerticalLayout fieldLayout = new VerticalLayout();
         fieldLayout.setSpacing(false);
@@ -272,72 +229,97 @@ public class Home extends VerticalLayout {
         labelComponent.getStyle()
                 .set("color", "darkgray")
                 .set("font-weight", "bold")
-                .set("margin-bottom", "0")
-                .set("text-align", "left");
+                .set("margin-bottom", "0");
 
         Paragraph valueComponent = new Paragraph(value);
         valueComponent.getStyle()
                 .set("font-size", "16px")
-                .set("font-weight", "normal")
                 .set("margin-top", "5px");
 
         fieldLayout.add(labelComponent, valueComponent);
         return fieldLayout;
     }
 
+    private VerticalLayout createDownloadField(String label, byte[] fileContent, String fileName) {
+        VerticalLayout fieldLayout = new VerticalLayout();
+        fieldLayout.setSpacing(false);
+        fieldLayout.setPadding(false);
+
+        Paragraph labelComp = new Paragraph(label);
+        labelComp.getStyle()
+                .set("color", "darkgray")
+                .set("font-weight", "bold")
+                .set("margin-bottom", "0");
+
+        if (fileContent == null || fileContent.length == 0) {
+            fieldLayout.add(labelComp, new Paragraph("Sin archivo"));
+            return fieldLayout;
+        }
+
+        StreamResource resource = new StreamResource(fileName, () -> new ByteArrayInputStream(fileContent));
+        resource.setContentType("application/pdf");
+
+        Anchor downloadLink = new Anchor(resource, "Descargar " + label);
+        downloadLink.getElement().setAttribute("download", true);
+        downloadLink.getStyle().set("margin-top", "5px")
+                .set("display", "inline-block");
+
+        fieldLayout.add(labelComp, downloadLink);
+        return fieldLayout;
+    }
+
+    private VerticalLayout createNoFileMessage(String label) {
+        VerticalLayout fieldLayout = new VerticalLayout();
+        fieldLayout.setSpacing(false);
+        fieldLayout.setPadding(false);
+
+        Paragraph labelComp = new Paragraph(label);
+        labelComp.getStyle()
+                .set("color", "darkgray")
+                .set("font-weight", "bold")
+                .set("margin-bottom", "0");
+
+        Paragraph noFileMsg = new Paragraph("No se ha subido ningún archivo");
+        noFileMsg.getStyle().set("margin-top", "5px");
+
+        fieldLayout.add(labelComp, noFileMsg);
+        return fieldLayout;
+    }
+
     private void openNewProjectDialog() {
         Dialog dialog = new Dialog();
-        dialog.setHeaderTitle(getTranslation("newProject"));
+        dialog.setHeaderTitle("Nuevo Proyecto");
 
         FormLayout formLayout = new FormLayout();
 
-        TextField titleField = new TextField(getTranslation("title"));
-        TextField shortTitleField = new TextField(getTranslation("shortTitle"));
-        TextField scopeField = new TextField(getTranslation("scope"));
-        DatePicker startDatePicker = new DatePicker(getTranslation("startDate"));
-        ComboBox<AppUser> promoterComboBox = new ComboBox<>(getTranslation("promoter"));
+        TextField titleField = new TextField("Título");
+        TextField shortTitleField = new TextField("Título Corto");
+        TextField scopeField = new TextField("Alcance");
+        DatePicker startDatePicker = new DatePicker("Fecha de Inicio");
+        ComboBox<AppUser> promoterCB = new ComboBox<>("Promotor");
+        promoterCB.setItems(userService.findAllByRole(Role.PROMOTER));
+        promoterCB.setItemLabelGenerator(u ->
+                u.getUsername() + " (" + u.getAcademicPosition() + ")"
+        );
 
-        // Cargar promotores en el ComboBox
-        promoterComboBox.setItems(userService.findAllByRole(Role.PROMOTER));
-        promoterComboBox.setItemLabelGenerator(user -> user.getUsername() + " - " + user.getAcademicPosition());
-
-        // Contenedores para subir archivos
         VerticalLayout memoryUploadContainer = createStyledUpload(
-                getTranslation("memory"),
-                getTranslation("upload.memory"),
-                new MemoryBuffer(),
-                ".pdf", ".docx", ".txt"
+                "Memoria", "Subir Memoria", new MemoryBuffer(), ".pdf", ".docx", ".txt"
         );
-
         VerticalLayout regulationsUploadContainer = createStyledUpload(
-                getTranslation("project.regulations"),
-                getTranslation("upload.regulations"),
-                new MemoryBuffer(),
-                ".pdf", ".docx", ".txt"
+                "Regulaciones", "Subir Regulaciones", new MemoryBuffer(), ".pdf", ".docx", ".txt"
         );
-
         VerticalLayout specificationsUploadContainer = createStyledUpload(
-                getTranslation("technical.specifications"),
-                getTranslation("upload.specifications"),
-                new MemoryBuffer(),
-                ".pdf", ".docx", ".txt"
+                "Especificaciones Técnicas", "Subir Especificaciones", new MemoryBuffer(), ".pdf", ".docx", ".txt"
         );
 
         formLayout.add(
-                titleField,
-                shortTitleField,
-                scopeField,
-                startDatePicker,
-                promoterComboBox,
-                memoryUploadContainer,
-                regulationsUploadContainer,
+                titleField, shortTitleField, scopeField, startDatePicker,
+                promoterCB, memoryUploadContainer, regulationsUploadContainer,
                 specificationsUploadContainer
         );
 
-        Button saveButton = new Button(getTranslation("button.save"), event -> {
+        Button saveButton = new Button("Guardar", e -> {
             Project newProject = new Project();
-
-            // Validación de campos obligatorios
             if (titleField.isEmpty()) {
                 Notification.show("El campo 'Título' es obligatorio.");
                 return;
@@ -365,124 +347,80 @@ public class Home extends VerticalLayout {
                 newProject.setStartDate(date);
             }
 
-            // Validar usuario autenticado
             Optional<AppUser> maybeUser = authenticatedUser.get();
             if (maybeUser.isEmpty()) {
-                Notification.show("No hay un usuario autenticado. Por favor, inicie sesión.");
+                Notification.show("No hay un usuario autenticado.");
                 return;
             }
-            AppUser currentUser = maybeUser.get();
-            newProject.setApplicantId(currentUser);
+            newProject.setApplicantId(maybeUser.get());
 
-            // Validación del ComboBox de promotores
-            AppUser selectedPromoter = promoterComboBox.getValue();
-            if (selectedPromoter == null) {
-                Notification.show("Debe seleccionar un promotor para el proyecto.");
+            AppUser promoter = promoterCB.getValue();
+            if (promoter == null) {
+                Notification.show("Debe seleccionar un promotor.");
                 return;
             }
-            newProject.setPromoterId(selectedPromoter.getUsername()); // Asigna el username al promoterId
+            newProject.setPromoterId(promoter.getUsername());
 
+            // Subir archivos
             try {
-                // Validación de archivo de memoria
                 byte[] memoryContent = extractFileContent(memoryUploadContainer);
                 if (memoryContent != null) {
                     newProject.setMemory(memoryContent);
                 } else {
-                    Notification.show("Debe subir un archivo de memoria del proyecto.");
+                    Notification.show("Debe subir un archivo de Memoria.");
                     return;
                 }
 
-                // Validación de archivo de regulaciones del proyecto
-                byte[] regulationsContent = extractFileContent(regulationsUploadContainer);
-                if (regulationsContent != null) {
-                    newProject.setProjectRegulations(regulationsContent);
+                byte[] regsContent = extractFileContent(regulationsUploadContainer);
+                if (regsContent != null) {
+                    newProject.setProjectRegulations(regsContent);
                 } else {
-                    Notification.show("Debe subir un archivo de regulaciones del proyecto.");
+                    Notification.show("Debe subir Regulaciones.");
                     return;
                 }
 
-                // Validación de especificaciones técnicas
-                byte[] specificationsContent = extractFileContent(specificationsUploadContainer);
-                if (specificationsContent != null) {
-                    newProject.setTechnicalSpecifications(specificationsContent);
+                byte[] specsContent = extractFileContent(specificationsUploadContainer);
+                if (specsContent != null) {
+                    newProject.setTechnicalSpecifications(specsContent);
                 } else {
-                    Notification.show("Debe subir un archivo de especificaciones técnicas.");
+                    Notification.show("Debe subir Especificaciones Técnicas.");
                     return;
                 }
-
-            } catch (Exception e) {
-                Notification.show("Error al cargar los archivos. Por favor, intente nuevamente.");
-                e.printStackTrace();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Notification.show("Error al subir archivos.");
                 return;
             }
 
             projectService.saveProject(newProject);
-            projectGrid.setItems(projectService.getAllProjects());
+
+            Notification.show("Proyecto creado exitosamente",
+                            3000, Notification.Position.BOTTOM_START)
+                    .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             dialog.close();
         });
 
-        Button cancelButton = new Button(getTranslation("cancel"), event -> dialog.close());
-        HorizontalLayout footerLayout = new HorizontalLayout(saveButton, cancelButton);
+        Button cancelButton = new Button("Cancelar", e -> dialog.close());
 
+        HorizontalLayout footerLayout = new HorizontalLayout(saveButton, cancelButton);
         dialog.add(formLayout, footerLayout);
         dialog.open();
     }
 
-
-    /**
-     * Extrae el contenido del archivo desde un contenedor de subida.
-     *
-     * @param uploadContainer El VerticalLayout que contiene el componente Upload.
-     * @return El arreglo de bytes del archivo subido o null si no se subió ningún archivo.
-     */
-    private byte[] extractFileContent(VerticalLayout uploadContainer) {
-        Optional<Upload> uploadOpt = uploadContainer.getChildren()
-                .filter(component -> component instanceof Upload)
-                .map(component -> (Upload) component)
-                .findFirst();
-
-        if (uploadOpt.isPresent()) {
-            Upload upload = uploadOpt.get();
-            if (upload.getReceiver() instanceof MemoryBuffer memoryBuffer) {
-                try {
-                    return memoryBuffer.getInputStream().readAllBytes();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return null;
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Crea un componente de subida estilizado con etiqueta y botón de subida.
-     *
-     * @param label              La etiqueta para el campo de subida.
-     * @param buttonText         El texto para el botón de subida.
-     * @param buffer             El MemoryBuffer que recibe el archivo subido.
-     * @param acceptedFileTypes  Los tipos de archivos aceptados.
-     * @return Un VerticalLayout que contiene el componente de subida estilizado.
-     */
     private VerticalLayout createStyledUpload(String label, String buttonText, MemoryBuffer buffer, String... acceptedFileTypes) {
         Upload upload = new Upload(buffer);
         upload.setAcceptedFileTypes(acceptedFileTypes);
 
-        // Create the upload button with an icon
-        Button uploadButton = new Button(buttonText);
-        uploadButton.setIcon(VaadinIcon.UPLOAD.create());
+        Button uploadButton = new Button(buttonText, VaadinIcon.UPLOAD.create());
         uploadButton.getStyle()
-                .set("margin", "0 auto") // Center the button
+                .set("margin", "0 auto")
                 .set("display", "flex")
                 .set("align-items", "center");
 
         upload.setUploadButton(uploadButton);
-
-        // Remove the drop label to simplify the design
         upload.setDropLabel(null);
         upload.setWidthFull();
 
-        // Style adjustments for a clean design
         upload.getElement().getStyle()
                 .set("border", "1px dashed #9E9E9E")
                 .set("border-radius", "8px")
@@ -504,10 +442,24 @@ public class Home extends VerticalLayout {
         return uploadContainer;
     }
 
-    // Updated loadPromotersOnStartup method
-    private static List<AppUser> cachedPromoters = null;
-    private static long cacheTimestamp = 0;
-    private static final long CACHE_DURATION_MS = 5 * 24 * 60 * 60 * 1000L; // 5 días
+    private byte[] extractFileContent(VerticalLayout uploadContainer) {
+        return uploadContainer.getChildren()
+                .filter(c -> c instanceof Upload)
+                .map(c -> (Upload) c)
+                .findFirst()
+                .map(u -> {
+                    if (u.getReceiver() instanceof MemoryBuffer memBuf) {
+                        try {
+                            return memBuf.getInputStream().readAllBytes();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            return null;
+                        }
+                    }
+                    return null;
+                })
+                .orElse(null);
+    }
 
     private void loadPromotersOnStartup() {
         try {
@@ -522,12 +474,10 @@ public class Home extends VerticalLayout {
                 }
 
                 ObjectMapper mapper = new ObjectMapper();
-
                 PromoterApiResponse response = mapper.readValue(conn.getInputStream(), PromoterApiResponse.class);
                 List<PromoterApiResponse.PromoterData> promoterDataList = response.getData();
 
                 List<AppUser> existingPromoters = userService.findAllByRole(Role.PROMOTER);
-
                 Map<String, AppUser> existingPromotersMap = existingPromoters.stream()
                         .collect(Collectors.toMap(AppUser::getUsername, Function.identity()));
 
@@ -536,21 +486,20 @@ public class Home extends VerticalLayout {
                 for (PromoterApiResponse.PromoterData promoterData : promoterDataList) {
                     String nombre = promoterData.getNombre();
                     String cargo = promoterData.getCargo();
-
                     String email = nombre.toLowerCase().replace(" ", ".") + "@uca.es";
 
                     AppUser appUser = existingPromotersMap.get(nombre);
                     if (appUser == null) {
                         appUser = new AppUser();
                         appUser.setUsername(nombre);
-                        appUser.setPassword("password"); // Plain text password
+                        appUser.setPassword("password");
                         appUser.setEmail(email);
                         appUser.setAcademicPosition(cargo);
                         appUser.setRole(Role.PROMOTER);
-                        userService.saveUser(appUser); // Encrypts the password
+                        userService.saveUser(appUser);
                     } else {
                         boolean updated = false;
-                        if (!appUser.getAcademicPosition().equals(cargo)) {
+                        if (!Objects.equals(appUser.getAcademicPosition(), cargo)) {
                             appUser.setAcademicPosition(cargo);
                             updated = true;
                         }
@@ -564,7 +513,6 @@ public class Home extends VerticalLayout {
                 Set<String> currentPromoterNames = promoterDataList.stream()
                         .map(PromoterApiResponse.PromoterData::getNombre)
                         .collect(Collectors.toSet());
-
                 for (AppUser existingPromoter : existingPromoters) {
                     if (!currentPromoterNames.contains(existingPromoter.getUsername())) {
                         userService.deleteUser(existingPromoter.getId());
@@ -573,7 +521,6 @@ public class Home extends VerticalLayout {
 
                 cachedPromoters = updatedPromoters;
                 cacheTimestamp = System.currentTimeMillis();
-
                 conn.disconnect();
             }
 
@@ -581,7 +528,7 @@ public class Home extends VerticalLayout {
             promoterComboBox.setItemLabelGenerator(AppUser::getUsername);
         } catch (Exception e) {
             e.printStackTrace();
-            Notification.show(getTranslation("error.load.promoters"));
+            Notification.show("Error al cargar promotores");
         }
     }
 }

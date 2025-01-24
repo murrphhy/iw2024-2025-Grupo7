@@ -16,21 +16,20 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
 
-import grupo7.models.Project;
-import grupo7.models.keys.TechnicianProjectId;
-import grupo7.models.TechnicianProject;
-import grupo7.security.AuthenticatedUser;
-import grupo7.services.TechnicianProjectService;
-import grupo7.repositories.TechnicianProjectRepository;
 import grupo7.models.AppUser;
-import grupo7.services.ProjectService;
+import grupo7.models.Project;
+import grupo7.models.TechnicianProject;
+import grupo7.models.keys.TechnicianProjectId;
+import grupo7.repositories.TechnicianProjectRepository;
+import grupo7.security.AuthenticatedUser;
 import grupo7.services.EmailService;
+import grupo7.services.ProjectService;
+import grupo7.services.TechnicianProjectService;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -43,7 +42,7 @@ import java.util.stream.Collectors;
  * The {@code CioView} class represents the dashboard view for the Chief Information Officer (CIO).
  * It allows the CIO to view and prioritize projects that are in the "presentado" (presented) state.
  * The view includes functionalities to display project details, download associated files,
- * and update the strategic alignment of projects.
+ * and update the strategic alignment of projects by calculating the average of six new evaluation fields.
  *
  * <p>This view is secured and only accessible to users with the "CIO" role.</p>
  */
@@ -53,10 +52,10 @@ import java.util.stream.Collectors;
 @Menu(order = 3)
 public class CioView extends VerticalLayout {
 
-    private  AuthenticatedUser authenticatedUser ;
-    private  TechnicianProjectId technicianProjectId;
-    private  TechnicianProjectService technicianProjectService;
-    private  TechnicianProject technicianProject;
+    private AuthenticatedUser authenticatedUser;
+    private TechnicianProjectId technicianProjectId;
+    private TechnicianProjectService technicianProjectService;
+    private TechnicianProject technicianProject;
     private final ProjectService projectService;
     private final EmailService emailService;
     private final Grid<Project> projectGrid = new Grid<>(Project.class);
@@ -64,10 +63,13 @@ public class CioView extends VerticalLayout {
 
     private final Binder<Project> binder = new Binder<>(Project.class);
 
-    /**
-     * NumberField for entering strategic alignment value.
-     */
-    private final NumberField strategicAlignmentField = new NumberField(getTranslation("alignment"));
+    // Seis campos de evaluación (0 a 10) para calcular la media
+    private final NumberField contribucionField = new NumberField(getTranslation("Contribución Estratégica"));
+    private final NumberField valorEstudiantesField = new NumberField(getTranslation("Valor para el estudiantado"));
+    private final NumberField viabilidadField = new NumberField(getTranslation("Viabilidad financiera "));
+    private final NumberField riesgosField = new NumberField(getTranslation("Riesgos tecnológicos"));
+    private final NumberField innovacionField = new NumberField(getTranslation("Innovación"));
+    private final NumberField factibilidadField = new NumberField(getTranslation("Factibilidad"));
 
     /**
      * Constructs a new {@code CioView} instance with the specified services.
@@ -76,14 +78,16 @@ public class CioView extends VerticalLayout {
      * @param emailService   the service to handle email notifications
      */
     @Autowired
-    public CioView(ProjectService projectService, EmailService emailService, AuthenticatedUser authenticatedUser, TechnicianProjectService technicianProjectService, TechnicianProjectRepository projectRepository) {
+    public CioView(ProjectService projectService,
+                   EmailService emailService,
+                   AuthenticatedUser authenticatedUser,
+                   TechnicianProjectService technicianProjectService,
+                   TechnicianProjectRepository projectRepository) {
+
         this.projectService = projectService;
         this.emailService = emailService;
         this.authenticatedUser = authenticatedUser;
         this.technicianProjectService = technicianProjectService;
-
-        binder.forField(strategicAlignmentField)
-                .bind(Project::getStrategicAlignment, Project::setStrategicAlignment);
 
         setSizeFull();
         add(createProjectGrids());
@@ -91,186 +95,191 @@ public class CioView extends VerticalLayout {
     }
 
     /**
- * Creates and configures the layout to display project grids, including
- * a grid for all projects and a separate grid for "Evaluated" projects.
- *
- * @return the configured {@code VerticalLayout} component
- */
-private VerticalLayout createProjectGrids() {
-
-    // Filtrar proyectos en estado "Presentado"
-    List<Project> presentedProjects = projectService.getAllProjects().stream()
-        .filter(project -> "Presentado".equalsIgnoreCase(project.getState()))
-        .collect(Collectors.toList());
-    
-    // Configurar el Grid
-    projectGrid.removeAllColumns();
-
-    projectGrid.addColumn(project -> project.getApplicantId() != null ? project.getApplicantId().getUsername() : getTranslation("notAvailable"))
-            .setHeader(getTranslation("applicant"))
-            .setSortable(true);
-
-    projectGrid.addColumn(Project::getShortTitle)
-            .setHeader(getTranslation("shortTitle"))
-            .setSortable(true);
-
-    projectGrid.addColumn(Project::getState)
-            .setHeader(getTranslation("state"))
-            .setSortable(true);
-
-    projectGrid.addColumn(project -> project.getStartDate() != null ? project.getStartDate().toString() : getTranslation("notAvailable"))
-            .setHeader(getTranslation("date"))
-            .setSortable(true);
-
-    projectGrid.asSingleSelect().addValueChangeListener(event -> editProject(event.getValue()));
-
-    projectGrid.addItemDoubleClickListener(event -> openProjectDetailsDialog(event.getItem()));
-
-    projectGrid.setItems(presentedProjects);
-
-    // Filtrar y configurar el segundo Grid (Proyectos Evaluados)
-    Grid<Project> evaluatedProjectsGrid = new Grid<>(Project.class, false);
-
-    List<Project> evaluatedProjects = projectService.getAllProjects().stream()
-            .filter(project -> "Evaluado".equalsIgnoreCase(project.getState()))
-            .collect(Collectors.toList());
-
-    evaluatedProjectsGrid.addColumn(project -> project.getApplicantId() != null ? project.getApplicantId().getUsername() : getTranslation("notAvailable"))
-            .setHeader(getTranslation("applicant"))
-            .setSortable(true);
-
-    evaluatedProjectsGrid.addColumn(Project::getShortTitle)
-            .setHeader(getTranslation("shortTitle"))
-            .setSortable(true);
-
-    evaluatedProjectsGrid.addColumn(Project::getState)
-            .setHeader(getTranslation("state"))
-            .setSortable(true);
-
-    evaluatedProjectsGrid.addColumn(project -> project.getStartDate() != null ? project.getStartDate().toString() : getTranslation("notAvailable"))
-            .setHeader(getTranslation("date"))
-            .setSortable(true);       
-    
-    // Abrir un dialogo al hacer doble clic
-    evaluatedProjectsGrid.addItemDoubleClickListener(event -> showProjectDetailsDialog(event.getItem()));   
-
-    evaluatedProjectsGrid.setItems(evaluatedProjects);
-
-    // Organizar los Grids en un layout
-    VerticalLayout layout = new VerticalLayout();
-    layout.add(new H3(getTranslation("presentedProjects")), projectGrid);
-    layout.add(new H3(getTranslation("evaluatedProjects")), evaluatedProjectsGrid);
-
-    return layout;
-}
-
-/**
- * Logic for accepting a project.
- *
- * @param project the project to accept
-*/
-private void acceptProject(Project project) {
-    // Cambiar el estado del proyecto a "aceptado"
-    project.setState(projectService.getNextState(project.getState(), true));  // true significa que el proyecto ha sido aceptado
-    projectService.saveProject(project);
-    Notification.show(getTranslation("projectAccepted") + ": " + project.getShortTitle());
-}
-
-/**
- * Logic for rejecting a project.
- *
- * @param project the project to reject
- */
-private void rejectProject(Project project) {
-    // Cambiar el estado del proyecto a "no aceptado"
-    project.setState(projectService.getNextState(project.getState(), false));  // false significa que el proyecto ha sido rechazado
-    projectService.saveProject(project); // Guardar cambios
-    Notification.show(getTranslation("projectRejected") + ": " + project.getShortTitle());
-}
-/**
- * Opens a dialog showing the details of the selected project with "Accept" and "Reject" buttons.
- *
- * @param project the project to display in the dialog
- */
-private void showProjectDetailsDialog(Project project) {
-    Dialog dialog = new Dialog();
-    dialog.setWidth("80%");
-    dialog.setHeight("80%");
-
-    VerticalLayout detailsLayout = new VerticalLayout();
-    detailsLayout.add(new H4(getTranslation("details.project")));
-    detailsLayout.add(new Paragraph(getTranslation("applicant") + ": " + 
-        (project.getApplicantId() != null ? project.getApplicantId().getUsername() : getTranslation("notAvailable"))));
-    detailsLayout.add(new Paragraph(getTranslation("shortTitle") + ": " + project.getShortTitle()));
-    detailsLayout.add(new Paragraph(getTranslation("state") + ": " + project.getState()));
-    detailsLayout.add(new Paragraph(getTranslation("date") + ": " + 
-        (project.getStartDate() != null ? project.getStartDate().toString() : getTranslation("notAvailable"))));
-
-    Optional<AppUser> maybeUser = authenticatedUser.get();
-    if (maybeUser.isEmpty()) {
-        Notification.show(getTranslation("no.logged.in"));
-        return;
+     * Configura los campos de evaluación, asignándoles rango [0..10], paso 1 y anchura fija.
+     */
+    private void configureEvaluationFields() {
+        for (NumberField nf : List.of(contribucionField, valorEstudiantesField, viabilidadField,
+                riesgosField, innovacionField, factibilidadField)) {
+            nf.setMin(0);
+            nf.setMax(10);
+            nf.setStep(1);
+            nf.setWidth("250px");
+        }
     }
 
-    technicianProjectId = new TechnicianProjectId(project.getApplicantId().getId(), project.getId());
-    Optional<TechnicianProject> maybeProject = technicianProjectService.getTechnicianProjectById(technicianProjectId);
+    /**
+     * Creates and configures the layout to display project grids, including
+     * a grid for all projects and a separate grid for "Evaluated" projects.
+     *
+     * @return the configured {@code VerticalLayout} component
+     */
+    private VerticalLayout createProjectGrids() {
+        // Filtrar proyectos en estado "Presentado"
+        List<Project> presentedProjects = projectService.getAllProjects().stream()
+                .filter(project -> "Presentado".equalsIgnoreCase(project.getState()))
+                .collect(Collectors.toList());
 
-    if (maybeProject.isEmpty()) {
-        Notification.show(getTranslation("noTechnicianProjectDetails"));
-        return;
+        // Configurar el Grid principal
+        projectGrid.removeAllColumns();
+        projectGrid.addColumn(project -> project.getApplicantId() != null
+                        ? project.getApplicantId().getUsername() : getTranslation("notAvailable"))
+                .setHeader(getTranslation("applicant"))
+                .setSortable(true);
+        projectGrid.addColumn(Project::getShortTitle)
+                .setHeader(getTranslation("shortTitle"))
+                .setSortable(true);
+        projectGrid.addColumn(Project::getState)
+                .setHeader(getTranslation("state"))
+                .setSortable(true);
+        projectGrid.addColumn(project -> project.getStartDate() != null
+                        ? project.getStartDate().toString() : getTranslation("notAvailable"))
+                .setHeader(getTranslation("date"))
+                .setSortable(true);
+
+        projectGrid.asSingleSelect().addValueChangeListener(event -> editProject(event.getValue()));
+        projectGrid.addItemDoubleClickListener(event -> openProjectDetailsDialog(event.getItem()));
+        projectGrid.setItems(presentedProjects);
+
+        // Filtrar y configurar el segundo Grid (Proyectos Evaluados)
+        evaluatedProjectsGrid = new Grid<>(Project.class, false);
+        List<Project> evaluatedProjects = projectService.getAllProjects().stream()
+                .filter(project -> "Evaluado".equalsIgnoreCase(project.getState()))
+                .collect(Collectors.toList());
+
+        evaluatedProjectsGrid.addColumn(project -> project.getApplicantId() != null
+                        ? project.getApplicantId().getUsername() : getTranslation("notAvailable"))
+                .setHeader(getTranslation("applicant"))
+                .setSortable(true);
+        evaluatedProjectsGrid.addColumn(Project::getShortTitle)
+                .setHeader(getTranslation("shortTitle"))
+                .setSortable(true);
+        evaluatedProjectsGrid.addColumn(Project::getState)
+                .setHeader(getTranslation("state"))
+                .setSortable(true);
+        evaluatedProjectsGrid.addColumn(project -> project.getStartDate() != null
+                        ? project.getStartDate().toString() : getTranslation("notAvailable"))
+                .setHeader(getTranslation("date"))
+                .setSortable(true);
+
+        // Abrir un dialogo al hacer doble clic
+        evaluatedProjectsGrid.addItemDoubleClickListener(event -> showProjectDetailsDialog(event.getItem()));
+        evaluatedProjectsGrid.setItems(evaluatedProjects);
+
+        // Organizar los Grids en un layout
+        VerticalLayout layout = new VerticalLayout();
+        layout.add(new H3(getTranslation("presentedProjects")), projectGrid);
+        layout.add(new H3(getTranslation("evaluatedProjects")), evaluatedProjectsGrid);
+
+        return layout;
     }
-    technicianProject = maybeProject.get();
 
-    detailsLayout.add(new Paragraph(getTranslation("financialResources") + ": " +
-        (technicianProject.getFinancialResources() != null ? technicianProject.getFinancialResources().toString() : getTranslation("notAvailable"))));
-    detailsLayout.add(new Paragraph(getTranslation("humanResources") + ": " +
-        technicianProject.getHumanResources()));
-    detailsLayout.add(new Paragraph(getTranslation("projectAppraisal") + ": " +
-        (technicianProject.getProjectAppraisal() != null ? technicianProject.getProjectAppraisal().toString() : getTranslation("notAvailable"))));
+    /**
+     * Logic for accepting a project.
+     *
+     * @param project the project to accept
+     */
+    private void acceptProject(Project project) {
+        // Cambiar el estado del proyecto a "aceptado"
+        project.setState(projectService.getNextState(project.getState(), true));
+        projectService.saveProject(project);
+        Notification.show(getTranslation("projectAccepted") + ": " + project.getShortTitle());
+    }
 
+    /**
+     * Logic for rejecting a project.
+     *
+     * @param project the project to reject
+     */
+    private void rejectProject(Project project) {
+        // Cambiar el estado del proyecto a "no aceptado"
+        project.setState(projectService.getNextState(project.getState(), false));
+        projectService.saveProject(project);
+        Notification.show(getTranslation("projectRejected") + ": " + project.getShortTitle());
+    }
 
-    Button acceptButton = new Button(getTranslation("accept"), event -> {
-        acceptProject(project);
-        dialog.close();
-    });
-    acceptButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+    /**
+     * Opens a dialog showing the details of the selected project with "Accept" and "Reject" buttons.
+     *
+     * @param project the project to display in the dialog
+     */
+    private void showProjectDetailsDialog(Project project) {
+        Dialog dialog = new Dialog();
+        dialog.setWidth("80%");
+        dialog.setHeight("80%");
 
-    Button rejectButton = new Button(getTranslation("reject"), event -> {
-        rejectProject(project);
-        dialog.close();
-    });
-    rejectButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+        VerticalLayout detailsLayout = new VerticalLayout();
+        detailsLayout.add(new H4(getTranslation("details.project")));
+        detailsLayout.add(new Paragraph(getTranslation("applicant") + ": " +
+                (project.getApplicantId() != null ? project.getApplicantId().getUsername() : getTranslation("notAvailable"))));
+        detailsLayout.add(new Paragraph(getTranslation("shortTitle") + ": " + project.getShortTitle()));
+        detailsLayout.add(new Paragraph(getTranslation("state") + ": " + project.getState()));
+        detailsLayout.add(new Paragraph(getTranslation("date") + ": " +
+                (project.getStartDate() != null ? project.getStartDate().toString() : getTranslation("notAvailable"))));
 
-    HorizontalLayout buttonLayout = new HorizontalLayout(acceptButton, rejectButton);
+        Optional<AppUser> maybeUser = authenticatedUser.get();
+        if (maybeUser.isEmpty()) {
+            Notification.show(getTranslation("no.logged.in"));
+            return;
+        }
 
-    dialog.add(detailsLayout, buttonLayout);
-    dialog.open();
-}
+        technicianProjectId = new TechnicianProjectId(project.getApplicantId().getId(), project.getId());
+        Optional<TechnicianProject> maybeProject = technicianProjectService.getTechnicianProjectById(technicianProjectId);
 
+        if (maybeProject.isEmpty()) {
+            Notification.show(getTranslation("noTechnicianProjectDetails"));
+            return;
+        }
+        technicianProject = maybeProject.get();
 
-/**
- * Refreshes the data in the grids after changes.
- */
-private void refreshGrids() {
-    // Refrescar ambos grids
-    projectGrid.setItems(projectService.getAllProjects().stream()
-        .filter(project -> "Presentado".equalsIgnoreCase(project.getState()))
-        .collect(Collectors.toList()));
-    projectGrid.getDataProvider().refreshAll();
+        detailsLayout.add(new Paragraph(getTranslation("financialResources") + ": " +
+                (technicianProject.getFinancialResources() != null
+                        ? technicianProject.getFinancialResources().toString() : getTranslation("notAvailable"))));
+        detailsLayout.add(new Paragraph(getTranslation("humanResources") + ": " +
+                technicianProject.getHumanResources()));
+        detailsLayout.add(new Paragraph(getTranslation("projectAppraisal") + ": " +
+                (technicianProject.getProjectAppraisal() != null
+                        ? technicianProject.getProjectAppraisal().toString() : getTranslation("notAvailable"))));
 
-    evaluatedProjectsGrid.setItems(projectService.getAllProjects().stream()
-        .filter(project -> "Evaluado".equalsIgnoreCase(project.getState()))
-        .collect(Collectors.toList()));
-    evaluatedProjectsGrid.getDataProvider().refreshAll();
-}
+        Button acceptButton = new Button(getTranslation("accept"), event -> {
+            acceptProject(project);
+            dialog.close();
+        });
+        acceptButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
+        Button rejectButton = new Button(getTranslation("reject"), event -> {
+            rejectProject(project);
+            dialog.close();
+        });
+        rejectButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
+        HorizontalLayout buttonLayout = new HorizontalLayout(acceptButton, rejectButton);
 
-/**
- * Edits the selected project by binding it to the form fields.
- *
- * @param project the selected {@code Project} to edit; {@code null} to clear the form
-*/
+        detailsLayout.add(buttonLayout);
+        dialog.add(detailsLayout);
+        dialog.open();
+    }
+
+    /**
+     * Refreshes the data in the grids after changes.
+     */
+    private void refreshGrids() {
+        // Refrescar ambos grids
+        projectGrid.setItems(projectService.getAllProjects().stream()
+                .filter(project -> "Presentado".equalsIgnoreCase(project.getState()))
+                .collect(Collectors.toList()));
+        projectGrid.getDataProvider().refreshAll();
+
+        evaluatedProjectsGrid.setItems(projectService.getAllProjects().stream()
+                .filter(project -> "Evaluado".equalsIgnoreCase(project.getState()))
+                .collect(Collectors.toList()));
+        evaluatedProjectsGrid.getDataProvider().refreshAll();
+    }
+
+    /**
+     * Edits the selected project by binding it to the form fields.
+     *
+     * @param project the selected {@code Project} to edit; {@code null} to clear the form
+     */
     private void editProject(Project project) {
         if (project == null) {
             clearForm();
@@ -283,12 +292,11 @@ private void refreshGrids() {
      * Opens a dialog displaying detailed information about the specified project.
      * This includes project titles, promoters, applicants, objectives, state, start date,
      * and downloadable files for project regulations, technical specifications, and memory.
-     * Additionally, it includes a strategic alignment evaluation form that is always visible at the bottom.
+     * Additionally, it includes the six evaluation fields used to calculate the strategic alignment.
      *
      * @param project the {@code Project} whose details are to be displayed
      */
     private void openProjectDetailsDialog(Project project) {
-        // Create a new dialog instance
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle(getTranslation("details.project"));
 
@@ -301,6 +309,7 @@ private void refreshGrids() {
         dialogLayout.setSpacing(false);
         dialogLayout.getStyle().set("text-align", "center");
 
+        // Contenedor con scroll
         VerticalLayout scrollableContent = new VerticalLayout();
         scrollableContent.setSizeFull();
         scrollableContent.setSpacing(false);
@@ -325,6 +334,7 @@ private void refreshGrids() {
         scrollableContent.add(createDetailField(getTranslation("startDate"),
                 project.getStartDate() != null ? project.getStartDate().toString() : getTranslation("notAvailable")));
 
+        // Archivos: memory, regulations, specs
         if (project.getMemory() != null && project.getMemory().length > 0) {
             scrollableContent.add(createDownloadField(getTranslation("button.download.Memory"), project.getMemory(),
                     project.getShortTitle() + "_memory.pdf"));
@@ -333,14 +343,16 @@ private void refreshGrids() {
         }
 
         if (project.getProjectRegulations() != null && project.getProjectRegulations().length > 0) {
-            scrollableContent.add(createDownloadField(getTranslation("button.download.Regulations"), project.getProjectRegulations(),
+            scrollableContent.add(createDownloadField(getTranslation("button.download.Regulations"),
+                    project.getProjectRegulations(),
                     project.getShortTitle() + "_regulations.pdf"));
         } else {
             scrollableContent.add(createNoFileMessage(getTranslation("project.regulations")));
         }
 
         if (project.getTechnicalSpecifications() != null && project.getTechnicalSpecifications().length > 0) {
-            scrollableContent.add(createDownloadField(getTranslation("button.download.Specifications"), project.getTechnicalSpecifications(),
+            scrollableContent.add(createDownloadField(getTranslation("button.download.Specifications"),
+                    project.getTechnicalSpecifications(),
                     project.getShortTitle() + "_technical_specifications.pdf"));
         } else {
             scrollableContent.add(createNoFileMessage(getTranslation("technical.specifications")));
@@ -348,6 +360,7 @@ private void refreshGrids() {
 
         dialogLayout.add(scrollableContent);
 
+        // Añadimos el formulario de evaluación
         VerticalLayout evaluationForm = createEvaluationForm(project, dialog);
         dialogLayout.add(evaluationForm);
 
@@ -359,7 +372,7 @@ private void refreshGrids() {
      * Creates a styled message indicating that no file has been uploaded for the specified label.
      *
      * @param label the label for which the file is missing
-     * @return a {@code Paragraph} component with the no-file message
+     * @return a {@code VerticalLayout} with the no-file message
      */
     private VerticalLayout createNoFileMessage(String label) {
         VerticalLayout fieldLayout = new VerticalLayout();
@@ -383,95 +396,114 @@ private void refreshGrids() {
     }
 
     /**
-     * Creates the strategic alignment evaluation form consisting of a number field and a save button.
-     * This form is designed to always remain visible at the bottom of the dialog.
+     * Creates the evaluation form with the six fields (0..10).
+     * When saved, calculates the average and assigns it to the project's strategicAlignment.
      *
      * @param project the {@code Project} being evaluated
      * @param dialog  the {@code Dialog} instance to which this form belongs
      * @return the configured {@code VerticalLayout} containing the evaluation form
      */
     private VerticalLayout createEvaluationForm(Project project, Dialog dialog) {
-        strategicAlignmentField.setValue(project.getStrategicAlignment() != null ? project.getStrategicAlignment() : 0.0);
+        // Configurar campos (rango 0..10, step, width)
+        configureEvaluationFields();
 
-        Button saveButton = new Button(getTranslation("button.save"), event -> {
+        // Botones Guardar / Cerrar
+        Button saveButton = new Button(getTranslation("button.save"), e -> {
             savePrioritization(project, dialog);
         });
+        Button closeButton = new Button(getTranslation("button.close"), e -> dialog.close());
 
-        Button closeButton = new Button(getTranslation("button.close"), event -> {
-            dialog.close();
-        });        
+        // Agrupar campos en 2 filas
+        HorizontalLayout row1 = new HorizontalLayout(contribucionField, valorEstudiantesField, viabilidadField);
+        HorizontalLayout row2 = new HorizontalLayout(riesgosField, innovacionField, factibilidadField);
 
-        HorizontalLayout formLayout = new HorizontalLayout(
-                strategicAlignmentField,
-                saveButton,
-                closeButton
-        );
-        formLayout.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
+        VerticalLayout fieldsLayout = new VerticalLayout(row1, row2);
+
+        HorizontalLayout formLayout = new HorizontalLayout(saveButton, closeButton);
         formLayout.setWidthFull();
+        formLayout.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
 
-        VerticalLayout evaluationForm = new VerticalLayout(formLayout);
+        VerticalLayout evaluationForm = new VerticalLayout(fieldsLayout, formLayout);
         evaluationForm.setWidthFull();
-        evaluationForm.setPadding(true);
-        evaluationForm.setSpacing(true);
         evaluationForm.getStyle().set("border-top", "1px solid #E0E0E0");
         evaluationForm.getStyle().set("background-color", "#F9F9F9");
-
         return evaluationForm;
     }
 
     /**
-     * Saves the strategic alignment prioritization for the specified project.
-     * Updates the project's state and sends an email notification to the applicant if applicable.
+     * Saves the average of the six fields into project's strategicAlignment.
+     * Then updates the project state, sends email if needed, etc.
      *
      * @param project the {@code Project} to prioritize
      * @param dialog  the {@code Dialog} instance to be closed after saving
      */
     private void savePrioritization(Project project, Dialog dialog) {
         if (project != null) {
-            Double alignmentValue = strategicAlignmentField.getValue();
-            if (alignmentValue != null) {
-                project.setStrategicAlignment(alignmentValue);
-                project.setState("Puntuado");
+            // Tomar valores y hacer la media
+            double c1 = safeValue(contribucionField.getValue());
+            double c2 = safeValue(valorEstudiantesField.getValue());
+            double c3 = safeValue(viabilidadField.getValue());
+            double c4 = safeValue(riesgosField.getValue());
+            double c5 = safeValue(innovacionField.getValue());
+            double c6 = safeValue(factibilidadField.getValue());
 
-                AppUser applicant = project.getApplicantId();
+            double average = (c1 + c2 + c3 + c4 + c5 + c6) / 6.0;
+            // Guardar la media en strategicAlignment
+            project.setStrategicAlignment(average);
+            // Cambiar estado si se desea
+            project.setState("Puntuado");
 
-                if (applicant != null) {
-                    String email = applicant.getEmail();
-                    String subject = getTranslation("email.subject"); // Traducción del asunto
-                    String message = String.format(
-                            getTranslation("email.message"), // Traducción del cuerpo del mensaje
-                            applicant.getUsername(),
-                            project.getTitle(),
-                            alignmentValue
-                    );
-                
-                    try {
-                        emailService.sendEmail(email, subject, message);
-                        Notification.show(getTranslation("notification.projectScored"), 3000, Notification.Position.BOTTOM_START);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Notification.show(getTranslation("notification.errorSendingEmail"), 3000, Notification.Position.BOTTOM_START)
-                                .addThemeVariants(NotificationVariant.LUMO_ERROR);
-                    }
-                }                
-
-                projectService.saveProject(project);
-
-                refreshGrid();
-                dialog.close();
-            } else {
-                Notification.show(getTranslation("notification.missingStrategicAlignment"), 3000, Notification.Position.MIDDLE)
-                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
+            // Enviar email
+            AppUser applicant = project.getApplicantId();
+            if (applicant != null) {
+                String email = applicant.getEmail();
+                String subject = getTranslation("email.subject"); // Ajusta la traducción
+                String message = String.format(
+                        getTranslation("email.message"),
+                        applicant.getUsername(),
+                        project.getTitle(),
+                        average
+                );
+                try {
+                    emailService.sendEmail(email, subject, message);
+                    Notification.show(getTranslation("notification.projectScored"),
+                            3000, Notification.Position.BOTTOM_START);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Notification.show(getTranslation("notification.errorSendingEmail"),
+                                    3000, Notification.Position.BOTTOM_START)
+                            .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
             }
+
+            // Guardar cambios
+            projectService.saveProject(project);
+
+            refreshGrid();
+            dialog.close();
         }
     }
 
     /**
-     * Clears the prioritization form by resetting the binder and clearing the strategic alignment field.
+     * Helper para devolver 0.0 en lugar de null.
+     */
+    private double safeValue(Double val) {
+        return (val == null) ? 0.0 : val;
+    }
+
+    /**
+     * Clears the prioritization form by resetting the binder
+     * and clearing the evaluation fields (if needed).
      */
     private void clearForm() {
         binder.setBean(null);
-        strategicAlignmentField.clear();
+        // Se limpian los campos de evaluación si corresponde
+        contribucionField.clear();
+        valorEstudiantesField.clear();
+        viabilidadField.clear();
+        riesgosField.clear();
+        innovacionField.clear();
+        factibilidadField.clear();
     }
 
     /**

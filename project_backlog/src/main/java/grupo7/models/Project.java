@@ -50,6 +50,14 @@ public class Project {
     @JoinColumn(name = "call_id")
     private Calls call;
 
+    public Calls getCall() {
+        return call;
+    }
+
+    public void setCall(Calls call) {
+        this.call = call;
+    }
+
     /**
      * The promoter ID associated with the project.
      * This field is optional and may be null.
